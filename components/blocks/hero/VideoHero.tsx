@@ -17,10 +17,10 @@ export default function VideoHero() {
             <div className="relative z-10 flex items-center justify-center min-h-screen">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
                     <h1 className="text-5xl md:text-6xl font-extrabold mb-6 animate-fade-in-up">
-                        The Future of Driving
+                        PromptLibrary V0
                     </h1>
                     <p className="text-xl md:text-2xl mb-8 animate-fade-in-up animation-delay-300">
-                        Experience the power of electric innovation.
+                        Experience the power of AI
                     </p>
                     <a
                         href="#"
