@@ -35,7 +35,11 @@ export default function NewPromptPage() {
         if (response.ok) {
             // Handle successful creation (e.g., redirect or show message)
         } else {
-            // Handle error
+            // Handle error response
+            const errorData = await response.json();
+            console.error('Error creating prompt:', errorData.error);
+            // Optionally, you can set an error state here to display to the user
+            // setError(errorData.error);
         }
     };
 

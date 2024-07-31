@@ -30,7 +30,7 @@ export default async function AccountMenu() {
         .eq('id', user?.id)
         .single()
 
-    console.log("user:", user)
+    // console.log("user:", user)
     console.log("profile:", data)
 
     return (
