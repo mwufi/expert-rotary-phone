@@ -7,6 +7,7 @@ interface Image {
     src: string;
     width: number;
     height: number;
+    column: number;
     x?: number;
     y?: number;
 }
@@ -28,6 +29,7 @@ const ImageExplorer = () => {
     const columnWidth = 300; // Width of each column
     const gutter = 10; // Space between images
     const numColumns = 8; // Initial number of columns
+    const [colY, setcolY] = useState<number[]>(Array(numColumns).fill(0));
 
     const fetchImages = useCallback(async () => {
         if (loading) return;
@@ -37,6 +39,7 @@ const ImageExplorer = () => {
             src: `https://picsum.photos/${columnWidth}/${200 + Math.floor(Math.random() * 100)}?random=${Date.now() + i}`,
             width: columnWidth,
             height: 200 + Math.floor(Math.random() * 100),
+            column: i % numColumns,
         }));
         setImages(prevImages => [...prevImages, ...newImages]);
         setPage(prevPage => prevPage + 1);
@@ -101,12 +104,12 @@ const ImageExplorer = () => {
 
     // Function to position images in a grid layout
     const positionImages = (images: Image[]) => {
-        const columns: number[] = [];
+        const columns: number[] = [...colY];
         let maxHeight = 0;
         const containerWidth = containerRef.current?.clientWidth || window.innerWidth;
 
         images.forEach((img, index) => {
-            let columnIndex = index % numColumns;
+            let columnIndex = img.column;
             if (!columns[columnIndex]) {
                 columns[columnIndex] = 0;
             }
