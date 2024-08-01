@@ -46,6 +46,14 @@ export default function Layout({ children }) {
                 <Home className="h-4 w-4 mr-3" />
                 Prompts
               </SidebarLink>
+              <SidebarLink href="/prompts/explore">
+                <Search className="h-4 w-4 mr-3" />
+                Explore
+              </SidebarLink>
+              <SidebarLink href="/prompts/profile">
+                <Users className="h-4 w-4 mr-3" />
+                Profile
+              </SidebarLink>
             </nav>
           </div>
           <div className="mt-auto p-4">
