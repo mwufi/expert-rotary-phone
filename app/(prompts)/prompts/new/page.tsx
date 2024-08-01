@@ -1,108 +1,72 @@
-"use client";
+import NewPromptForm from "./Form";
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/server/importSupabase';
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+export default function Page() {
 
-export default function NewPromptPage() {
-    const [name, setName] = useState("");
-    const [defaultModel, setDefaultModel] = useState("");
-    const [promptText, setPromptText] = useState("");
-    const [inputVars, setInputVars] = useState<{ [key: string]: string }>({});
-    const [newVarKey, setNewVarKey] = useState("");
+    async function createNewPrompt(formData: FormData) {
+        'use server'
 
-    const handleAddVar = () => {
-        if (newVarKey) {
-            setInputVars(prev => ({ ...prev, [newVarKey]: "" }));
-            setNewVarKey("");
+        const data = {
+            name: formData.get('name') as string,
+            settings: {
+                defaultModel: formData.get('defaultModel') as string,
+            },
+            promptText: formData.get('promptText') as string,
+            input_vars: Object.fromEntries(
+                Array.from(formData.entries())
+                    .filter(([key]) => key.startsWith('inputVar_'))
+                    .map(([key, value]) => [key.replace('inputVar_', ''), value])
+            ),
+        };
+
+        console.log("You submitted", data)
+
+        const supabase = createClient();
+
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            return { error: 'Unauthorized' };
         }
-    };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        const response = await fetch("/api/prompts/create", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+
+        if (profileError || !profile) {
+            return { error: 'Profile not found' };
+        }
+
+        const { name, settings, promptText, input_vars } = data;
+
+        const { data: newPrompt, error } = await supabase
+            .from('prompts')
+            .insert({
+                profile_id: profile.id,
                 name,
-                settings: { defaultModel },
-                promptText,
-                input_vars: inputVars,
-            }),
-        });
-        if (response.ok) {
-            // Handle successful creation (e.g., redirect or show message)
-        } else {
-            // Handle error response
-            const errorData = await response.json();
-            console.error('Error creating prompt:', errorData.error);
-            // Optionally, you can set an error state here to display to the user
-            // setError(errorData.error);
+                settings,
+                prompt_text: promptText,
+                input_vars,
+            })
+            .select()
+            .single();
+
+        if (error) {
+            console.error(error);
+            return { error: error.message };
         }
+
+        console.log("Created new prompt:", newPrompt);
+        redirect('/prompts');
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
-                <Input
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                />
-            </div>
-
-            <div>
-                <label htmlFor="defaultModel" className="block text-sm font-medium text-gray-700">Default Model</label>
-                <Select onValueChange={setDefaultModel} required>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Select a model" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="claude-sonnet">Claude Sonnet</SelectItem>
-                        <SelectItem value="gpt-4">GPT-4</SelectItem>
-                        {/* Add more model options as needed */}
-                    </SelectContent>
-                </Select>
-            </div>
-
-            <div>
-                <label htmlFor="promptText" className="block text-sm font-medium text-gray-700">Prompt Text</label>
-                <Textarea
-                    id="promptText"
-                    value={promptText}
-                    onChange={(e) => setPromptText(e.target.value)}
-                    rows={5}
-                    required
-                />
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Input Variables</label>
-                {Object.entries(inputVars).map(([key, value]) => (
-                    <div key={key} className="mt-2">
-                        <Input
-                            value={value}
-                            onChange={(e) => setInputVars(prev => ({ ...prev, [key]: e.target.value }))}
-                            placeholder={key}
-                        />
-                    </div>
-                ))}
-                <div className="mt-2 flex">
-                    <Input
-                        value={newVarKey}
-                        onChange={(e) => setNewVarKey(e.target.value)}
-                        placeholder="New variable name"
-                        className="mr-2"
-                    />
-                    <Button type="button" onClick={handleAddVar}>Add</Button>
-                </div>
-            </div>
-
-            <Button type="submit">Create Prompt</Button>
-        </form>
-    );
+        <div className="p-4">
+            <h1 className="text-3xl font-bold my-4">Create a new prompt</h1>
+            <NewPromptForm createNewPrompt={createNewPrompt} />
+        </div>
+    )
 }
