@@ -30,11 +30,11 @@ const ImageExplorer = () => {
     const columnWidth = 300; // Width of each column
     const gutter = 10; // Space between images
     const numColumns = 7; // Initial number of columns
-    const [colY, setcolY] = useState<number[]>(Array(numColumns).fill(0));
+    const [colY, setcolY] = useState<number[]>(Array(numColumns).fill(0).map(() => -Math.floor(Math.random() * 301) - 100));
 
     useEffect(() => {
         // if we scroll over the top
-        const Y_BUFFER = 200;
+        const Y_BUFFER = 500;
         const minColumnY = Math.min(...colY);
         if (-translateY < minColumnY + Y_BUFFER) {
             console.log("over the top!", -translateY, minColumnY);
@@ -47,10 +47,10 @@ const ImageExplorer = () => {
         setLoading(true);
         // Simulating an API call to fetch images
         const newImages: Image[] = Array.from({ length: numColumns * 2 }, (_, i) => ({
-            src: `https://picsum.photos/${columnWidth}/${200 + Math.floor(Math.random() * 100)}?random=${Date.now() + i}`,
+            src: `https://picsum.photos/${columnWidth}/${300 + Math.floor(Math.random() * 100)}?random=${Date.now() + i}`,
             width: columnWidth,
             key: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
-            height: 200 + Math.floor(Math.random() * 100),
+            height: 300 + Math.floor(Math.random() * 100),
             column: i % numColumns,
         }));
         if (above) {
@@ -133,8 +133,7 @@ const ImageExplorer = () => {
     const positionImages = (images: Image[]) => {
         let columns: number[] = [...colY];
         let maxHeight = 0;
-        const containerWidth = containerRef.current?.clientWidth || window.innerWidth;
-
+        const containerWidth = containerRef.current?.clientWidth || (typeof window !== 'undefined' && window.innerWidth) || 700;
         images.forEach((img, index) => {
             let columnIndex = img.column;
 
@@ -174,7 +173,7 @@ const ImageExplorer = () => {
 
     return (
         <div className="h-screen w-screen overflow-hidden">
-            <div className="sticky top-0 bg-white p-4 shadow-md z-10">
+            <div className="sticky top-0 bg-white p-4 shadow-md z-10 hidden">
                 <p className="text-lg font-semibold">
                     Images Loaded: <span className="text-blue-600">{images.length}</span>
                 </p>
@@ -192,6 +191,7 @@ const ImageExplorer = () => {
                 onWheel={handleWheel}
             >
                 <div className="grid_layer_wrapper">
+                    <div className="absolute h-full w-full bg-stone-200"></div>
                     <div className="grid_layer">
                         <div className="grid_content"
                             style={{
@@ -211,13 +211,35 @@ const ImageExplorer = () => {
                                         height: `${img.height}px`,
                                         left: `${img.x}px`,
                                         top: `${img.y}px`,
+                                        overflow: 'hidden',
+                                        borderRadius: '0.75rem', // equivalent to rounded-xl
+                                        margin: '0.25rem', // equivalent to m-1
+                                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', // equivalent to shadow-md
+                                        transition: 'box-shadow 0.3s ease-in-out',
                                     }}
+                                    onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'} // equivalent to hover:shadow-lg
+                                    onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'}
                                 >
                                     <img
                                         src={img.src}
                                         alt={`Image ${index}`}
-                                        className="grid_item_img hover:border-4 hover:border-blue-600"
-                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        className="grid_item_img"
+                                        style={{ 
+                                            width: '110%', 
+                                            height: '110%', 
+                                            objectFit: 'cover',
+                                            transition: 'all 0.3s ease-in-out',
+                                            transform: 'scale(1.1)',
+                                            margin: '-5%',
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.transform = 'scale(1)';
+                                            e.currentTarget.style.margin = '0';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.transform = 'scale(1.1)';
+                                            e.currentTarget.style.margin = '-5%';
+                                        }}
                                         draggable={false}
                                     />
                                 </div>
