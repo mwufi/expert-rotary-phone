@@ -224,9 +224,9 @@ const ImageExplorer = () => {
                                         src={img.src}
                                         alt={`Image ${index}`}
                                         className="grid_item_img"
-                                        style={{ 
-                                            width: '110%', 
-                                            height: '110%', 
+                                        style={{
+                                            width: '110%',
+                                            height: '110%',
                                             objectFit: 'cover',
                                             transition: 'all 0.3s ease-in-out',
                                             transform: 'scale(1.1)',
