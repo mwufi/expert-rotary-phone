@@ -8,6 +8,7 @@ interface Image {
     width: number;
     height: number;
     column: number;
+    key: string;
     x?: number;
     y?: number;
 }
@@ -28,23 +29,49 @@ const ImageExplorer = () => {
 
     const columnWidth = 300; // Width of each column
     const gutter = 10; // Space between images
-    const numColumns = 8; // Initial number of columns
+    const numColumns = 7; // Initial number of columns
     const [colY, setcolY] = useState<number[]>(Array(numColumns).fill(0));
 
-    const fetchImages = useCallback(async () => {
+    useEffect(() => {
+        // if we scroll over the top
+        const Y_BUFFER = 200;
+        const minColumnY = Math.min(...colY);
+        if (-translateY < minColumnY + Y_BUFFER) {
+            console.log("over the top!", -translateY, minColumnY);
+            fetchImages({ above: true });
+        }
+    }, [translateY]);
+
+    const fetchImages = useCallback(async ({ above } = { above: false }) => {
         if (loading) return;
         setLoading(true);
         // Simulating an API call to fetch images
-        const newImages: Image[] = Array.from({ length: 20 }, (_, i) => ({
+        const newImages: Image[] = Array.from({ length: numColumns * 2 }, (_, i) => ({
             src: `https://picsum.photos/${columnWidth}/${200 + Math.floor(Math.random() * 100)}?random=${Date.now() + i}`,
             width: columnWidth,
+            key: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
             height: 200 + Math.floor(Math.random() * 100),
             column: i % numColumns,
         }));
-        setImages(prevImages => [...prevImages, ...newImages]);
+        if (above) {
+            // compute new colY (the start y position of the column) by copying from it and subtracting image heights and gutter
+            const newColY = [...colY];
+            for (const img of newImages) {
+                newColY[img.column] -= img.height + gutter;
+            }
+
+            setcolY(newColY);
+            setImages(prevImages => [...newImages, ...prevImages]);
+        } else {
+            setImages(prevImages => [...prevImages, ...newImages]);
+        }
         setPage(prevPage => prevPage + 1);
         setLoading(false);
-    }, [loading]);
+
+        // the important part is to include colY in the dependency array!!
+        // otherwise fetchImages will always have a cached value of colY
+        // (the initial value)
+    }, [loading, colY]);
 
     useEffect(() => {
         fetchImages();
@@ -104,15 +131,12 @@ const ImageExplorer = () => {
 
     // Function to position images in a grid layout
     const positionImages = (images: Image[]) => {
-        const columns: number[] = [...colY];
+        let columns: number[] = [...colY];
         let maxHeight = 0;
         const containerWidth = containerRef.current?.clientWidth || window.innerWidth;
 
         images.forEach((img, index) => {
             let columnIndex = img.column;
-            if (!columns[columnIndex]) {
-                columns[columnIndex] = 0;
-            }
 
             img.x = columnIndex * (columnWidth + gutter);
             img.y = columns[columnIndex];
@@ -154,9 +178,13 @@ const ImageExplorer = () => {
                 <p className="text-lg font-semibold">
                     Images Loaded: <span className="text-blue-600">{images.length}</span>
                 </p>
+                <p>
+                    columns: <span className="text-green-600">{numColumns}</span>
+                </p>
                 <p className="text-lg font-semibold">
                     Images in Viewport: <span className="text-green-600">{imagesInViewport}</span>
                 </p>
+                <p>translateY: <span className="text-green-600">{translateY}</span> minY: <span className="text-green-600">{Math.min(...colY)}</span></p>
             </div>
             <div className="grid_container"
                 ref={containerRef}
@@ -175,7 +203,7 @@ const ImageExplorer = () => {
                         >
                             {positionedImages.map((img, index) => (
                                 <div
-                                    key={index}
+                                    key={img.key}
                                     className="grid_item"
                                     style={{
                                         position: 'absolute',
@@ -188,7 +216,7 @@ const ImageExplorer = () => {
                                     <img
                                         src={img.src}
                                         alt={`Image ${index}`}
-                                        className="grid_item_img"
+                                        className="grid_item_img hover:border-4 hover:border-blue-600"
                                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                         draggable={false}
                                     />
