@@ -73,7 +73,6 @@ const ImageExplorer = () => {
     }, [images, translateX, translateY]);
 
     const handleWheel = (e: React.WheelEvent) => {
-        e.preventDefault();
         const newTranslateX = translateX - e.deltaX;
         const newTranslateY = translateY - e.deltaY;
         setTranslateX(newTranslateX);
