@@ -3,8 +3,16 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useInView } from 'react-intersection-observer';
 
+interface Image {
+    src: string;
+    width: number;
+    height: number;
+    x?: number;
+    y?: number;
+}
+
 const ImageExplorer = () => {
-    const [images, setImages] = useState([]);
+    const [images, setImages] = useState<Image[]>([]);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
     const [imagesInViewport, setImagesInViewport] = useState(0);
@@ -13,18 +21,19 @@ const ImageExplorer = () => {
         triggerOnce: false,
     });
 
-    const containerRef = useRef(null);
+    const containerRef = useRef<HTMLDivElement>(null);
     const [translateX, setTranslateX] = useState(0);
     const [translateY, setTranslateY] = useState(0);
 
     const columnWidth = 300; // Width of each column
     const gutter = 10; // Space between images
+    const numColumns = 8; // Initial number of columns
 
     const fetchImages = useCallback(async () => {
         if (loading) return;
         setLoading(true);
         // Simulating an API call to fetch images
-        const newImages = Array.from({ length: 20 }, (_, i) => ({
+        const newImages: Image[] = Array.from({ length: 20 }, (_, i) => ({
             src: `https://picsum.photos/${columnWidth}/${200 + Math.floor(Math.random() * 100)}?random=${Date.now() + i}`,
             width: columnWidth,
             height: 200 + Math.floor(Math.random() * 100),
@@ -63,7 +72,7 @@ const ImageExplorer = () => {
         return () => window.removeEventListener('scroll', updateImagesInViewport);
     }, [images, translateX, translateY]);
 
-    const handleWheel = (e) => {
+    const handleWheel = (e: React.WheelEvent) => {
         e.preventDefault();
         const newTranslateX = translateX - e.deltaX;
         const newTranslateY = translateY - e.deltaY;
@@ -71,11 +80,11 @@ const ImageExplorer = () => {
         setTranslateY(newTranslateY);
     };
 
-    const handleMouseDown = (e) => {
+    const handleMouseDown = (e: React.MouseEvent) => {
         const startX = e.clientX - translateX;
         const startY = e.clientY - translateY;
 
-        const handleMouseMove = (e) => {
+        const handleMouseMove = (e: MouseEvent) => {
             const newTranslateX = e.clientX - startX;
             const newTranslateY = e.clientY - startY;
             setTranslateX(newTranslateX);
@@ -92,18 +101,30 @@ const ImageExplorer = () => {
     };
 
     // Function to position images in a grid layout
-    const positionImages = (images) => {
-        const columns = [];
+    const positionImages = (images: Image[]) => {
+        const columns: number[] = [];
         let maxHeight = 0;
+        const containerWidth = containerRef.current?.clientWidth || window.innerWidth;
 
         images.forEach((img, index) => {
-            const columnIndex = index % 3; // 3 columns
+            let columnIndex = index % numColumns;
             if (!columns[columnIndex]) {
                 columns[columnIndex] = 0;
             }
 
             img.x = columnIndex * (columnWidth + gutter);
             img.y = columns[columnIndex];
+
+            // Check if the image is on screen using translateX
+            // wait this long before moving the image to the right
+            const X_BUFFER = columnWidth * 2;
+
+            while (img.x + translateX < 0 - X_BUFFER) {
+                img.x += (numColumns) * (columnWidth + gutter);
+            }
+            while (img.x + translateX + columnWidth > containerWidth + X_BUFFER) {
+                img.x -= (numColumns) * (columnWidth + gutter);
+            }
 
             columns[columnIndex] += img.height + gutter;
             maxHeight = Math.max(maxHeight, columns[columnIndex]);
@@ -115,7 +136,7 @@ const ImageExplorer = () => {
     const { positionedImages, maxHeight } = positionImages(images);
 
     useEffect(() => {
-        const preventDefaultScroll = (e) => {
+        const preventDefaultScroll = (e: WheelEvent) => {
             if (e.deltaX !== 0) {
                 e.preventDefault();
             }
@@ -146,7 +167,7 @@ const ImageExplorer = () => {
                             style={{
                                 transform: `translate3d(${translateX}px, ${translateY}px, 0)`,
                                 transition: 'transform 0.1s ease-out',
-                                width: `${3 * (columnWidth + gutter)}px`,
+                                width: `${numColumns * (columnWidth + gutter)}px`,
                                 height: `${maxHeight}px`,
                             }}
                         >
