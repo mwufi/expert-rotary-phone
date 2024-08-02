@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Futuristic Glowing UI Interfaces</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&family=Audiowide&family=Exo+2:wght@200;400;700&family=Syncopate:wght@400;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #0a0a0a;
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .interface {
+            background-color: #1a1a1a;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px;
+            width: 300px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
+        }
+
+        h2 {
+            font-family: 'Orbitron', sans-serif;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        button {
+            font-family: inherit;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        /* Interface 1: Neon Buttons */
+        .neon-interface h2 {
+            color: #0ff;
+            text-shadow: 0 0 5px #0ff, 0 0 10px #0ff, 0 0 20px #0ff;
+        }
+
+        .neon-button {
+            background-color: transparent;
+            color: #0ff;
+            border: 2px solid #0ff;
+            border-radius: 5px;
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            text-shadow: 0 0 5px #0ff;
+            box-shadow: 0 0 10px #0ff, inset 0 0 10px #0ff;
+        }
+
+        .neon-button:hover {
+            background-color: #0ff;
+            color: #000;
+        }
+
+        /* Interface 2: Holographic Display */
+        .holo-interface {
+            background: linear-gradient(45deg, #1a1a1a, #2a2a2a);
+            overflow: hidden;
+        }
+
+        .holo-interface h2 {
+            color: #7fdbff;
+            text-shadow: 0 0 10px #7fdbff;
+        }
+
+        .holo-display {
+            font-family: 'Exo 2', sans-serif;
+            font-size: 24px;
+            color: #7fdbff;
+            text-align: center;
+            margin: 20px 0;
+            text-shadow: 0 0 10px #7fdbff;
+            animation: holoPulse 2s infinite alternate;
+        }
+
+        @keyframes holoPulse {
+            from { opacity: 0.7; }
+            to { opacity: 1; }
+        }
+
+        /* Interface 3: Energy Bars */
+        .energy-interface h2 {
+            color: #ff3300;
+            text-shadow: 0 0 10px #ff3300;
+        }
+
+        .energy-bar {
+            background-color: #333;
+            height: 20px;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .energy-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff3300, #ff6600);
+            box-shadow: 0 0 10px #ff3300;
+            animation: energyPulse 2s infinite alternate;
+        }
+
+        @keyframes energyPulse {
+            from { opacity: 0.8; }
+            to { opacity: 1; }
+        }
+
+        /* Interface 4: Sci-Fi Toggles */
+        .toggle-interface h2 {
+            color: #9933ff;
+            text-shadow: 0 0 10px #9933ff;
+        }
+
+        .toggle-switch {
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+            background-color: #333;
+            border-radius: 15px;
+            position: relative;
+            margin: 10px;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background-color: #9933ff;
+            top: 2px;
+            left: 2px;
+            transition: 0.3s;
+            box-shadow: 0 0 10px #9933ff;
+        }
+
+        .toggle-switch.active {
+            background-color: #9933ff;
+        }
+
+        .toggle-switch.active::after {
+            left: 32px;
+            background-color: #fff;
+        }
+
+        /* Interface 5: Futuristic Data Display */
+        .data-interface h2 {
+            font-family: 'Syncopate', sans-serif;
+            color: #00ff99;
+            text-shadow: 0 0 10px #00ff99;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .data-item {
+            background-color: #222;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            border: 1px solid #00ff99;
+            box-shadow: 0 0 10px #00ff99;
+        }
+
+        .data-label {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .data-value {
+            font-size: 18px;
+            color: #00ff99;
+            text-shadow: 0 0 5px #00ff99;
+        }
+    </style>
+</head>
+<body>
+    <div class="interface neon-interface">
+        <h2>System Control</h2>
+        <button class="neon-button">Initialize</button>
+        <button class="neon-button">Configure</button>
+        <button class="neon-button">Execute</button>
+    </div>
+
+    <div class="interface holo-interface">
+        <h2>Holo Projector</h2>
+        <div class="holo-display">SYSTEM ONLINE</div>
+    </div>
+
+    <div class="interface energy-interface">
+        <h2>Energy Levels</h2>
+        <div class="energy-bar"><div class="energy-fill" style="width: 75%;"></div></div>
+        <div class="energy-bar"><div class="energy-fill" style="width: 50%;"></div></div>
+        <div class="energy-bar"><div class="energy-fill" style="width: 90%;"></div></div>
+    </div>
+
+    <div class="interface toggle-interface">
+        <h2>Quantum Shields</h2>
+        <div class="toggle-switch"></div>
+        <div class="toggle-switch active"></div>
+        <div class="toggle-switch"></div>
+    </div>
+
+    <div class="interface data-interface">
+        <h2>Stellar Data</h2>
+        <div class="data-grid">
+            <div class="data-item">
+                <div class="data-label">Temperature</div>
+                <div class="data-value">3,742 K</div>
+            </div>
+            <div class="data-item">
+                <div class="data-label">Mass</div>
+                <div class="data-value">1.989 × 10^30 kg</div>
+            </div>
+            <div class="data-item">
+                <div class="data-label">Radius</div>
+                <div class="data-value">696,340 km</div>
+            </div>
+            <div class="data-item">
+                <div class="data-label">Luminosity</div>
+                <div class="data-value">3.828 × 10^26 W</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('.toggle-switch').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                toggle.classList.toggle('active');
+            });
+        });
+    </script>
+</body>
+</html>
