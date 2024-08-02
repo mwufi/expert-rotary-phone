@@ -24,7 +24,7 @@ const LeetCodeSwiper: React.FC<{ questions: LeetCodeQuestion[] }> = ({ questions
         await controls.start({
             x: direction === 'left' ? -300 : 300,
             opacity: 0,
-            transition: { duration: 0.3 },
+            transition: { duration: 0.15 },
         });
 
         const currentQuestion = questions[currentIndex];
