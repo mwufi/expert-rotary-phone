@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, useAnimation, useMotionValue, useTransform } from 'framer-motion';
 import { feedback, LeetCodeQuestion } from './server';
 
-const LeetCodeSwiper: React.FC = async ({ questions }: { questions: LeetCodeQuestion[] }) => {
+const LeetCodeSwiper: React.FC = ({ questions }: { questions: LeetCodeQuestion[] }) => {
 
     const [currentIndex, setCurrentIndex] = useState(0);
     const controls = useAnimation();
