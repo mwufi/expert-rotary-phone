@@ -2,7 +2,7 @@
     "name": "My Next.js PWA",
     "short_name": "MyPWA",
     "description": "A simple PWA built with Next.js",
-    "start_url": "/",
+    "start_url": "/swiping",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#000000",
