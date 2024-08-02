@@ -38,7 +38,7 @@ const LeetCodeSwiper: React.FC<{ questions: LeetCodeQuestion[] }> = ({ questions
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-            <h1 className="text-3xl font-bold mb-8">LeetCode Swiper</h1>
+            <h1 className="text-3xl font-bold mb-8">LeetCode Swiper 2</h1>
             <motion.div
                 className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md"
                 animate={controls}
