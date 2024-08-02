@@ -1,6 +1,13 @@
 'use server'
 
-export async function fetchInitialLeetCodeQuestions() {
+export interface LeetCodeQuestion {
+    id: number;
+    title: string;
+    difficulty: string;
+    description: string;
+}
+
+export async function fetchInitialLeetCodeQuestions(): Promise<LeetCodeQuestion[]> {
     return [
         { id: 1, title: "Two Sum", difficulty: "Easy", description: "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target." },
         { id: 2, title: "Add Two Numbers", difficulty: "Medium", description: "You are given two non-empty linked lists representing two non-negative integers. The digits are stored in reverse order, and each of their nodes contains a single digit." },
