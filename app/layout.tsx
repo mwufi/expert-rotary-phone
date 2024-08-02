@@ -7,6 +7,12 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Playground V0",
   description: "make your ideas come to life",
+  manifest: '/manifest.json',
+  themeColor: '#000000',
+  appleWebApp: {
+    title: 'Leetcode Swiper',
+    statusBarStyle: 'black-translucent',
+  },
 };
 
 export default function RootLayout({
