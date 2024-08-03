@@ -7,7 +7,7 @@ export default function PromptsPage() {
                 <h1 className="text-6xl font-bold">
                     Welcome to Prompts
                 </h1>
-                
+
                 <p className="mt-3 text-2xl">
                     This is the default hello page for the Prompts section.
                 </p>
