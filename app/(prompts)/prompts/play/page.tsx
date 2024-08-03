@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import PromptPreview from './PromptPreview';
+import { callClaude, getTestResponse } from '@/lib/server/claude';
 
 const samplePrompt = `
 you are an AI agent. please double the input:
@@ -36,11 +37,14 @@ export default function PromptsPlayPage() {
     const [output, setOutput] = useState('<h1 className="text-2xl">hi there</h1>');
     const [promptName, setPromptName] = useState('');
     const [promptContent, setPromptContent] = useState(samplePrompt);
+    const [formatted_prompt, setFormattedPrompt] = useState('');
     const [prompt, setPrompt] = useState<Prompt>({
         name: '',
         template: samplePrompt,
         inputVariables: parseInputVariables(samplePrompt)
     });
+
+    const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
 
     useEffect(() => {
         const parsedVariables = parseInputVariables(promptContent);
@@ -51,6 +55,27 @@ export default function PromptsPlayPage() {
         }));
     }, [promptContent]);
 
+    const replaceVariables = (content, variables) => {
+        return content.replace(/\{\{(\w+)\}\}/g, (match, variable) => {
+            const value = variables[variable];
+            if (value === undefined) return match;
+
+            try {
+                // Attempt to parse as JSON
+                const jsonValue = JSON.parse(value);
+                return JSON.stringify(jsonValue, null, 2);
+            } catch (e) {
+                // If not valid JSON, return as is
+                return value;
+            }
+        });
+    };
+
+    useEffect(() => {
+        const formattedPrompt = replaceVariables(promptContent, inputValues);
+        setFormattedPrompt(formattedPrompt);
+    }, [promptContent, inputValues]);
+
     const handleSavePrompt = () => {
         // Logic to save the prompt
     };
@@ -59,8 +84,10 @@ export default function PromptsPlayPage() {
         // Logic to view historical versions
     };
 
-    const handleCallPrompt = () => {
+    const handleCallPrompt = async () => {
         // Logic to call the prompt and set output
+        const response = await callClaude(formatted_prompt);
+        setOutput(response);
     };
 
     const updateInputVariableType = (name: string, type: 'string' | 'number' | 'boolean') => {
@@ -72,7 +99,6 @@ export default function PromptsPlayPage() {
         }));
     };
 
-    const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
 
     const handleInputChange = (name: string, value: string) => {
         setInputValues(prev => ({ ...prev, [name]: value }));
@@ -164,25 +190,7 @@ export default function PromptsPlayPage() {
                             <div className="mt-4">
                                 <h3 className="text-lg font-semibold mb-2">Full Prompt:</h3>
                                 <pre className="bg-gray-100 p-3 rounded-md whitespace-pre-wrap">
-                                    {(() => {
-                                        const replaceVariables = (content, variables) => {
-                                            return content.replace(/\{\{(\w+)\}\}/g, (match, variable) => {
-                                                const value = variables[variable];
-                                                if (value === undefined) return match;
-                                                
-                                                try {
-                                                    // Attempt to parse as JSON
-                                                    const jsonValue = JSON.parse(value);
-                                                    return JSON.stringify(jsonValue, null, 2);
-                                                } catch (e) {
-                                                    // If not valid JSON, return as is
-                                                    return value;
-                                                }
-                                            });
-                                        };
-
-                                        return replaceVariables(promptContent, inputValues);
-                                    })()}
+                                    {formatted_prompt}
                                 </pre>
                             </div>
                         </div>
