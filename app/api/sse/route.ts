@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
-import { callClaude } from '@/lib/server/claude';
+import { callClaude, ClaudeSettings } from '@/lib/server/claude';
 
 // This is required to enable streaming
 export const dynamic = 'force-dynamic';
+
+const customSettings: Partial<ClaudeSettings> = {
+    max_tokens: 4096
+};
 
 export async function POST(request: Request) {
     const { prompt } = await request.json();
@@ -16,7 +20,7 @@ export async function POST(request: Request) {
             try {
                 await callClaude(prompt, (message) => {
                     controller.enqueue(message);
-                });
+                }, customSettings);
                 controller.close();
             } catch (error) {
                 console.error('Error in streaming:', error);

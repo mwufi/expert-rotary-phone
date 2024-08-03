@@ -1,63 +1,39 @@
-/*
-sample claude api call
-import Anthropic from '@anthropic-ai/sdk';
-
-const anthropic = new Anthropic({
-  apiKey: 'my_api_key', // defaults to process.env["ANTHROPIC_API_KEY"]
-});
-
-const msg = await anthropic.messages.create({
-  model: "claude-3-5-sonnet-20240620",
-  max_tokens: 1024,
-  messages: [{ role: "user", content: "Hello, Claude" }],
-});
-console.log(msg);
-
-*/
-
 'use server'
 
 import Anthropic from '@anthropic-ai/sdk';
-import { pushToClient } from '@/app/api/sse/route';
 
 const client = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-// Rest of the code
-interface Message {
-    role: 'user' | 'assistant';
-    content: string;
-}
+export type ClaudeSettings = {
+    max_tokens: number;
+    model: string;
+    stream: boolean;
+};
 
-export async function getTestResponse() {
-    const message = await client.messages.create({
-        max_tokens: 1024,
-        messages: [{ role: 'user', content: 'Hello, Claude' }],
-        model: 'claude-3-opus-20240229',
-    });
+const defaultSettings: ClaudeSettings = {
+    max_tokens: 4096,
+    model: 'claude-3-5-sonnet-20240620',
+    stream: true,
+};
 
-    const blocks = message.content.map((block) => {
-        if ('text' in block) {
-            return block.text;
-        } else {
-            console.log('non text block', block);
-        }
-        return '';
-    }).filter(Boolean);
-
-    return blocks.join('\n');
-}
-
-export async function callClaude(message: string, pushToClient: (text: string) => void): Promise<void> {
+export async function callClaude(
+    message: string,
+    pushToClient: (text: string) => void,
+    customSettings?: Partial<ClaudeSettings>
+): Promise<void> {
     console.log("Called with", message);
+
+    const settings: ClaudeSettings = {
+        ...defaultSettings,
+        ...customSettings
+    };
 
     try {
         const stream = await client.messages.create({
-            max_tokens: 1024,
+            ...settings,
             messages: [{ role: 'user', content: message }],
-            model: 'claude-3-opus-20240229',
-            stream: true,
         });
 
         for await (const chunk of stream) {
