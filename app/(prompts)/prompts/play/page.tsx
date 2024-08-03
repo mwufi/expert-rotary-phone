@@ -1,27 +1,15 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import PromptPreview from './PromptPreview';
-import { callClaude, getTestResponse } from '@/lib/server/claude';
+import { FetchedPrompt, InputVariable, Prompt } from '../types';
 
 const samplePrompt = `
 you are an AI agent. please double the input:
 
 {{input}}
 `
-
-interface InputVariable {
-    name: string;
-    type: 'string' | 'number' | 'boolean';
-    description?: string;
-}
-
-interface Prompt {
-    name: string;
-    template: string;
-    inputVariables: InputVariable[];
-}
 
 const parseInputVariables = (template: string): InputVariable[] => {
     const regex = /{{(\w+)}}/g;
@@ -32,7 +20,7 @@ const parseInputVariables = (template: string): InputVariable[] => {
     });
 };
 
-export default function PromptsPlayPage() {
+export default function PromptsPlayPage({ id }: { id: string }) {
     const [mode, setMode] = useState('editing');
     const [output, setOutput] = useState('<h1 className="text-2xl">hi there</h1>');
     const [promptName, setPromptName] = useState('');
@@ -46,6 +34,32 @@ export default function PromptsPlayPage() {
     const [waiting, setWaiting] = useState(false);
 
     const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
+
+    useEffect(() => {
+        if (id) {
+            const storedPrompts = localStorage.getItem('prompts');
+            if (storedPrompts) {
+                const parsedPrompts: FetchedPrompt[] = JSON.parse(storedPrompts);
+                const foundPrompt = parsedPrompts.find(p => p.id === id);
+                if (foundPrompt) {
+                    setPromptName(foundPrompt.name);
+                    setPromptContent(foundPrompt.prompt_template);
+                    setFormattedPrompt(foundPrompt.formatted_prompt);
+                    setOutput(foundPrompt.current_output);
+                    setPrompt({
+                        name: foundPrompt.name,
+                        template: foundPrompt.prompt_template,
+                        inputVariables: foundPrompt.variables.map(v => ({ name: v.name, type: v.type }))
+                    });
+                    const initialInputValues = {};
+                    foundPrompt.variables.forEach(v => {
+                        initialInputValues[v.name] = v.currentValue.toString();
+                    });
+                    setInputValues(initialInputValues);
+                }
+            }
+        }
+    }, [id]);
 
     useEffect(() => {
         const parsedVariables = parseInputVariables(promptContent);
@@ -78,7 +92,33 @@ export default function PromptsPlayPage() {
     }, [promptContent, inputValues]);
 
     const handleSavePrompt = () => {
-        // Logic to save the prompt
+        const newPrompt: FetchedPrompt = {
+            id: id || Date.now().toString(),
+            name: promptName,
+            prompt_template: promptContent,
+            variables: prompt.inputVariables.map(variable => ({
+                name: variable.name,
+                type: variable.type,
+                currentValue: inputValues[variable.name] || ''
+            })),
+            formatted_prompt: formatted_prompt,
+            current_output: output,
+            createdAt: Date.now()
+        };
+
+        // Get existing prompts from localStorage
+        const existingPrompts = JSON.parse(localStorage.getItem('prompts') || '[]');
+
+        // Update or add the prompt
+        const updatedPrompts = id
+            ? existingPrompts.map(p => p.id === id ? newPrompt : p)
+            : [newPrompt, ...existingPrompts];
+
+        // Save updated prompts back to localStorage
+        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+
+        // Optionally, you can show a success message or redirect the user
+        alert('Prompt saved successfully!');
     };
 
     const handleViewHistory = () => {
@@ -142,98 +182,109 @@ export default function PromptsPlayPage() {
 
     return (
         <div className="flex flex-col min-h-screen">
-            <header className="p-4 bg-gray-100">
-                <div className="flex justify-between items-center">
+            <header className="p-4 bg-gray-100 border-b">
+                <div className="container mx-auto flex justify-between items-center">
+                    <Link href="/prompts" className="text-blue-500 hover:text-blue-700 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+                        </svg>
+                        Back to Prompts
+                    </Link>
+                    <div className="flex items-center">
+                        <button onClick={handleSavePrompt} className="bg-blue-500 text-white px-4 py-2 rounded mr-2 hover:bg-blue-600 transition-colors">Save</button>
+                        <button onClick={handleViewHistory} className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors">History</button>
+                    </div>
+                </div>
+            </header>
+            <main className="flex flex-1 flex-col">
+                <div className="container mx-auto p-4">
                     <input
                         type="text"
                         value={promptName}
                         onChange={(e) => setPromptName(e.target.value)}
                         placeholder="Name your prompt"
-                        className="border p-2 rounded"
+                        className="w-full border p-2 rounded mb-4 text-lg font-semibold"
                     />
-                    <div>
-                        <button onClick={handleSavePrompt} className="bg-blue-500 text-white px-4 py-2 rounded mr-2">Save</button>
-                        <button onClick={handleViewHistory} className="bg-gray-500 text-white px-4 py-2 rounded">History</button>
-                    </div>
-                </div>
-            </header>
-            <main className="flex flex-1">
-                <div className="w-1/2 p-4 border-r">
-                    <div className="mb-4">
+
+                    <div className="flex justify-start mb-4">
                         <button
                             onClick={() => setMode('editing')}
-                            className={`mr-2 ${mode === 'editing' ? 'bg-blue-500 text-white' : 'bg-gray-200'} px-4 py-2 rounded`}
+                            className={`mr-2 ${mode === 'editing' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} px-4 py-2 rounded transition-colors`}
                         >
                             Editing
                         </button>
                         <button
                             onClick={() => setMode('testing')}
-                            className={`${mode === 'testing' ? 'bg-blue-500 text-white' : 'bg-gray-200'} px-4 py-2 rounded`}
+                            className={`${mode === 'testing' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} px-4 py-2 rounded transition-colors`}
                         >
                             Testing
                         </button>
                     </div>
-                    {mode === 'editing' ? (
-                        <div>
-                            <textarea
-                                value={promptContent}
-                                onChange={(e) => setPromptContent(e.target.value)}
-                                className="w-full h-64 border p-2 rounded"
-                                placeholder="Enter your prompt here..."
-                            />
-                            <div className="mt-4">
-                                <h3 className="text-lg font-semibold">Input Variables:</h3>
-                                {prompt.inputVariables.map((variable, index) => (
-                                    <div key={index} className="flex items-center mt-2">
-                                        <span className="mr-2">{variable.name}:</span>
-                                        <select
-                                            value={variable.type}
-                                            onChange={(e) => updateInputVariableType(variable.name, e.target.value as 'string' | 'number' | 'boolean')}
-                                            className="border p-1 rounded"
-                                        >
-                                            <option value="string">String</option>
-                                            <option value="number">Number</option>
-                                            <option value="boolean">Boolean</option>
-                                        </select>
+                    <div className="flex flex-1 gap-6">
+                        <div className="w-1/2">
+                            {mode === 'editing' ? (
+                                <div>
+                                    <textarea
+                                        value={promptContent}
+                                        onChange={(e) => setPromptContent(e.target.value)}
+                                        className="w-full h-64 border p-2 rounded"
+                                        placeholder="Enter your prompt here..."
+                                    />
+                                    <div className="mt-4">
+                                        <h3 className="text-lg font-semibold">Input Variables:</h3>
+                                        {prompt.inputVariables.map((variable, index) => (
+                                            <div key={index} className="flex items-center mt-2">
+                                                <span className="mr-2">{variable.name}:</span>
+                                                <select
+                                                    value={variable.type}
+                                                    onChange={(e) => updateInputVariableType(variable.name, e.target.value as 'string' | 'number' | 'boolean')}
+                                                    className="border p-1 rounded"
+                                                >
+                                                    <option value="string">String</option>
+                                                    <option value="number">Number</option>
+                                                    <option value="boolean">Boolean</option>
+                                                </select>
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
-                        </div>
-                    ) : (
-                        <div>
-                            <h3 className="text-lg font-semibold mb-4">Test Inputs:</h3>
-                            {prompt.inputVariables.map((variable, index) => (
-                                <div key={index} className="mb-4">
-                                    <label className="block mb-2">{variable.name}:</label>
-                                    {variable.type === 'number' ? (
-                                        <input
-                                            type="number"
-                                            value={inputValues[variable.name] || ''}
-                                            onChange={(e) => handleInputChange(variable.name, e.target.value)}
-                                            className="w-full border p-2 rounded"
-                                        />
-                                    ) : (
-                                        <textarea
-                                            value={inputValues[variable.name] || ''}
-                                            onChange={(e) => handleInputChange(variable.name, e.target.value)}
-                                            className="w-full border p-2 rounded"
-                                            rows={3}
-                                        />
-                                    )}
                                 </div>
-                            ))}
-                            <button onClick={handleCallPrompt} className="bg-green-500 text-white px-4 py-2 rounded mt-4">Call Prompt</button>
-                            <div className="mt-4">
-                                <h3 className="text-lg font-semibold mb-2">Full Prompt:</h3>
-                                <pre className="bg-gray-100 p-3 rounded-md whitespace-pre-wrap">
-                                    {formatted_prompt}
-                                </pre>
-                            </div>
+                            ) : (
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-4">Test Inputs:</h3>
+                                    {prompt.inputVariables.map((variable, index) => (
+                                        <div key={index} className="mb-4">
+                                            <label className="block mb-2">{variable.name}:</label>
+                                            {variable.type === 'number' ? (
+                                                <input
+                                                    type="number"
+                                                    value={inputValues[variable.name] || ''}
+                                                    onChange={(e) => handleInputChange(variable.name, e.target.value)}
+                                                    className="w-full border p-2 rounded"
+                                                />
+                                            ) : (
+                                                <textarea
+                                                    value={inputValues[variable.name] || ''}
+                                                    onChange={(e) => handleInputChange(variable.name, e.target.value)}
+                                                    className="w-full border p-2 rounded"
+                                                    rows={3}
+                                                />
+                                            )}
+                                        </div>
+                                    ))}
+                                    <button onClick={handleCallPrompt} className="bg-green-500 text-white px-4 py-2 rounded mt-4">Call Prompt</button>
+                                    <div className="mt-4">
+                                        <h3 className="text-lg font-semibold mb-2">Full Prompt:</h3>
+                                        <pre className="bg-gray-100 p-3 rounded-md whitespace-pre-wrap">
+                                            {formatted_prompt}
+                                        </pre>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    )}
-                </div>
-                <div className="w-1/2 p-4">
-                    <PromptPreview output={output} waiting={waiting} />
+                        <div className="w-1/2">
+                            <PromptPreview output={output} waiting={waiting} />
+                        </div>
+                    </div>
                 </div>
             </main>
             <footer className="p-4 bg-gray-100">
