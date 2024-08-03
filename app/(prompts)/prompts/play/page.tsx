@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import PromptPreview from './PromptPreview';
 import { callClaude, getTestResponse } from '@/lib/server/claude';
@@ -43,6 +43,7 @@ export default function PromptsPlayPage() {
         template: samplePrompt,
         inputVariables: parseInputVariables(samplePrompt)
     });
+    const [waiting, setWaiting] = useState(false);
 
     const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
 
@@ -84,11 +85,46 @@ export default function PromptsPlayPage() {
         // Logic to view historical versions
     };
 
-    const handleCallPrompt = async () => {
-        // Logic to call the prompt and set output
-        const response = await callClaude(formatted_prompt);
-        setOutput(response);
+    const handleStream = async (formatted_prompt: string) => {
+        try {
+            setWaiting(true);
+            setOutput('');
+            console.log("fetching stream");
+            const res = await fetch('/api/sse', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: formatted_prompt }),
+            });
+
+            if (!res.ok) throw new Error('Network response was not ok');
+
+            const reader = res.body?.getReader();
+            const decoder = new TextDecoder();
+
+            while (true) {
+                const { done, value } = await reader?.read();
+                if (done) break;
+                const chunk = decoder.decode(value);
+                try {
+                    console.log("received", chunk);
+                    setWaiting(false);
+                    setOutput(prevOutput => prevOutput + chunk);
+                    // Handle the parsed data here
+                } catch (error) {
+                    console.error("Error parsing JSON:", error);
+                }
+            }
+        } catch (err) {
+            console.error('Streaming error:', err);
+        } finally {
+            setWaiting(false);
+        }
     };
+
+    const handleCallPrompt = React.useCallback(async () => {
+        await handleStream(formatted_prompt);
+    }, [formatted_prompt, handleStream]);
+
 
     const updateInputVariableType = (name: string, type: 'string' | 'number' | 'boolean') => {
         setPrompt(prev => ({
@@ -197,7 +233,7 @@ export default function PromptsPlayPage() {
                     )}
                 </div>
                 <div className="w-1/2 p-4">
-                    <PromptPreview output={output} />
+                    <PromptPreview output={output} waiting={waiting} />
                 </div>
             </main>
             <footer className="p-4 bg-gray-100">

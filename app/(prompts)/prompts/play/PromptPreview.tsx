@@ -8,9 +8,10 @@ import { getFirstCodeBlock } from '@/lib/utils';
 
 interface PromptPreviewProps {
     output: string;
+    waiting: boolean;
 }
 
-const PromptPreview: React.FC<PromptPreviewProps> = ({ output }) => {
+const PromptPreview: React.FC<PromptPreviewProps> = ({ output, waiting }) => {
     const [parsedHtml, setParsedHtml] = useState<string | null>(null);
 
     useEffect(() => {
@@ -20,7 +21,11 @@ const PromptPreview: React.FC<PromptPreviewProps> = ({ output }) => {
 
     return (
         <Card className="w-full h-screen flex flex-col">
-            {parsedHtml ? (
+            {waiting ? (
+                <div className="flex items-center justify-center h-full">
+                    <p className="text-lg">Waiting for AI...</p>
+                </div>
+            ) : parsedHtml ? (
                 <Tabs defaultValue="raw" className="w-full h-full flex flex-col">
                     <TabsList className="flex w-full">
                         <TabsTrigger value="raw" className="flex-1 py-1 px-2 text-sm">Raw Output</TabsTrigger>
