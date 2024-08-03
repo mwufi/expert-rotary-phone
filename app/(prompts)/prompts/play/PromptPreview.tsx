@@ -4,22 +4,23 @@ import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getFirstCodeBlock } from '@/lib/utils';
 
 interface PromptPreviewProps {
     output: string;
 }
 
 const PromptPreview: React.FC<PromptPreviewProps> = ({ output }) => {
-    const [hasHtml, setHasHtml] = useState(false);
+    const [parsedHtml, setParsedHtml] = useState<string | null>(null);
 
     useEffect(() => {
-        // Simple check for HTML content
-        setHasHtml(/<[a-z][\s\S]*>/i.test(output));
+        const htmlContent = getFirstCodeBlock(output, 'html');
+        setParsedHtml(htmlContent);
     }, [output]);
 
     return (
         <Card className="w-full h-screen flex flex-col">
-            {hasHtml ? (
+            {parsedHtml ? (
                 <Tabs defaultValue="raw" className="w-full h-full flex flex-col">
                     <TabsList className="flex w-full">
                         <TabsTrigger value="raw" className="flex-1 py-1 px-2 text-sm">Raw Output</TabsTrigger>
@@ -32,7 +33,7 @@ const PromptPreview: React.FC<PromptPreviewProps> = ({ output }) => {
                     </TabsContent>
                     <TabsContent value="preview" className="flex-grow">
                         <ScrollArea className="h-full w-full rounded-md border p-4">
-                            <div dangerouslySetInnerHTML={{ __html: output }} />
+                            <div dangerouslySetInnerHTML={{ __html: parsedHtml || '' }} />
                         </ScrollArea>
                     </TabsContent>
                 </Tabs>

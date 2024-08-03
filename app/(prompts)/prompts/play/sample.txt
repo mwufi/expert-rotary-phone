@@ -1,0 +1,77 @@
+Generate a complete, optimized webpage by extrapolating from a single UI component or set of components. Use the provided component(s) as a foundation to create a cohesive, fully functional, and efficient page. Follow these steps:
+
+1. Start with the provided component example(s):
+   ```html
+   {{element}}
+   ```
+   ```css
+   {{styles}}
+   ```
+
+2. Analyze the component's style and structure, including colors, fonts, spacing, and overall design language.
+
+3. Clean up and optimize the original styles and element:
+   - Remove any redundant or unused CSS
+   - Consolidate similar styles
+   - Ensure proper use of CSS specificity
+   - Optimize the HTML structure for semantic meaning and accessibility
+   - Consider using CSS custom properties (variables) for recurring values
+
+4. Create a full HTML structure for a webpage, including `<!DOCTYPE html>`, `<html>`, `<head>`, and `<body>` tags.
+
+5. In the `<head>`, add a `<style>` tag with the optimized styles and extend them to create a consistent theme for the entire page.
+
+6. In the `<body>`, generate a complete page structure based on the component's purpose:
+   - If it's a button: Create a landing page with a hero section, feature list, and call-to-action using the button.
+   - If it's a card: Design a grid layout showcasing multiple instances of the card with varied content.
+   - If it's a form input: Develop a full contact or signup form using the input style as a base.
+   - For other components: Infer an appropriate page type and structure that highlights the component's use.
+
+7. Extrapolate additional UI elements needed for the page (e.g., navigation, footer, headings) based on the optimized component's style.
+
+8. Implement responsive design principles to ensure the page looks good on both desktop and mobile devices.
+
+9. Further optimize the full page:
+   - Use CSS methodologies like BEM or utility-first CSS for scalability
+   - Implement performance best practices (e.g., proper use of heading hierarchy, lazy loading for images)
+   - Ensure consistent naming conventions across HTML classes and CSS selectors
+
+10. Add comments in the HTML and CSS to explain the optimization process and how the original component's style was extrapolated to create the full page design.
+
+Example output structure:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimized UI Design</title>
+    <style>
+        /* Optimized and extended styles */
+        :root {
+            /* CSS custom properties for consistent theming */
+        }
+
+        /* Base styles */
+        /* Component-specific styles */
+        /* Layout styles */
+        /* Utility classes */
+        /* Responsive adjustments */
+    </style>
+</head>
+<body>
+    <header class="header">
+        <!-- Optimized navigation based on component style -->
+    </header>
+    <main class="main-content">
+        <!-- Optimized main content structure -->
+        <!-- Original component used in context with optimized structure -->
+        <!-- Additional extrapolated and optimized elements -->
+    </main>
+    <footer class="footer">
+        <!-- Optimized footer design based on component style -->
+    </footer>
+</body>
+</html>
+```
