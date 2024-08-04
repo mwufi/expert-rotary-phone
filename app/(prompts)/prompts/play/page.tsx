@@ -6,6 +6,9 @@ import PromptPreview from './PromptPreview';
 import { FetchedPrompt, InputVariable, Prompt } from '../types';
 import Test from './Test'
 
+import { useRouter } from 'next/navigation';
+
+
 const samplePrompt = `
 you are an AI agent. please double the input:
 
@@ -22,6 +25,8 @@ const parseInputVariables = (template: string): InputVariable[] => {
 };
 
 export default function PromptsPlayPage({ id }: { id: string }) {
+    const router = useRouter();
+
     const [mode, setMode] = useState('editing');
     const [output, setOutput] = useState('<h1 className="text-2xl">hi there</h1>');
     const [promptName, setPromptName] = useState('');
@@ -92,6 +97,35 @@ export default function PromptsPlayPage({ id }: { id: string }) {
         setFormattedPrompt(formattedPrompt);
     }, [promptContent, inputValues]);
 
+
+    const handleForkPrompt = () => {
+        const newId = `fork-${Date.now()}`;
+        const forkedPrompt: FetchedPrompt = {
+            id: newId,
+            name: `${promptName} (Fork)`,
+            prompt_template: promptContent,
+            variables: prompt.inputVariables.map(variable => ({
+                name: variable.name,
+                type: variable.type,
+                currentValue: inputValues[variable.name] || ''
+            })),
+            formatted_prompt: formatted_prompt,
+            current_output: output,
+            createdAt: Date.now()
+        };
+
+        // Get existing prompts from localStorage
+        const existingPrompts = JSON.parse(localStorage.getItem('prompts') || '[]');
+
+        // Add the forked prompt to the beginning of the array
+        const updatedPrompts = [forkedPrompt, ...existingPrompts];
+
+        // Save updated prompts back to localStorage
+        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+
+        // Redirect to the new forked prompt using Next.js router
+        router.push(`/prompts/${newId}`);
+    };
     const handleSavePrompt = () => {
         const newPrompt: FetchedPrompt = {
             id: id || Date.now().toString(),
@@ -193,6 +227,7 @@ export default function PromptsPlayPage({ id }: { id: string }) {
                     </Link>
                     <div className="flex items-center">
                         <button onClick={handleSavePrompt} className="bg-blue-500 text-white px-4 py-2 rounded mr-2 hover:bg-blue-600 transition-colors">Save</button>
+                        <button onClick={handleForkPrompt} className="bg-green-500 text-white px-4 py-2 rounded mr-2 hover:bg-green-600 transition-colors">Fork</button>
                         <button onClick={handleViewHistory} className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors">History</button>
                     </div>
                 </div>
