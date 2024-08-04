@@ -206,23 +206,29 @@ export default function PromptsPlayPage({ id }: { id: string }) {
                         placeholder="Name your prompt"
                         className="w-full border p-2 rounded mb-4 text-lg font-semibold"
                     />
-
-                    <div className="flex justify-start mb-4">
-                        <button
-                            onClick={() => setMode('editing')}
-                            className={`mr-2 ${mode === 'editing' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} px-4 py-2 rounded transition-colors`}
-                        >
-                            Editing
-                        </button>
-                        <button
-                            onClick={() => setMode('testing')}
-                            className={`${mode === 'testing' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} px-4 py-2 rounded transition-colors`}
-                        >
-                            Testing
-                        </button>
+                    <div className="mb-6">
+                        <p className="text-gray-600 italic">
+                            Create, test, and save custom prompts with variable inputs.
+                        </p>
                     </div>
+
                     <div className="flex flex-1 gap-6">
                         <div className="w-1/2">
+
+                            <div className="flex justify-start mb-4">
+                                <button
+                                    onClick={() => setMode('editing')}
+                                    className={`mr-2 ${mode === 'editing' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} px-4 py-2 rounded transition-colors`}
+                                >
+                                    Editing
+                                </button>
+                                <button
+                                    onClick={() => setMode('testing')}
+                                    className={`${mode === 'testing' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} px-4 py-2 rounded transition-colors`}
+                                >
+                                    Testing
+                                </button>
+                            </div>
                             {mode === 'editing' ? (
                                 <div>
                                     <textarea
@@ -302,7 +308,7 @@ export default function PromptsPlayPage({ id }: { id: string }) {
             <footer className="p-4 bg-gray-100">
                 <Link href="/prompts" className="text-blue-500">Back to Home</Link>
             </footer>
-            <Test/>
+            <Test />
         </div>
     );
 }
