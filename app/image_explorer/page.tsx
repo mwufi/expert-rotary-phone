@@ -2,34 +2,29 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useInView } from 'react-intersection-observer';
+import { usePreventDefaultScroll } from './hooks/preventScroll';
+import SingleImage from './SingleImage';
+import { Image } from './types';
+import usePan from './hooks/usePanZoom';
 
-interface Image {
-    src: string;
-    width: number;
-    height: number;
-    column: number;
-    key: string;
-    x?: number;
-    y?: number;
-}
 
 const ImageExplorer = () => {
     const [images, setImages] = useState<Image[]>([]);
     const [loading, setLoading] = useState(false);
-    const [page, setPage] = useState(1);
     const [imagesInViewport, setImagesInViewport] = useState(0);
     const [ref, inView] = useInView({
         threshold: 0,
         triggerOnce: false,
     });
 
-    const containerRef = useRef<HTMLDivElement>(null);
-    const [translateX, setTranslateX] = useState(0);
-    const [translateY, setTranslateY] = useState(0);
+    // we can pass a function here, but for now, ignore all scroll! (otherwise it scrolls the page)
+    usePreventDefaultScroll(e => true)
 
-    const columnWidth = 300; // Width of each column
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [translateX, translateY, handleWheel, handleMouseDown] = usePan();
+    const columnWidth = 300;
+    const numColumns = 7;
     const gutter = 10; // Space between images
-    const numColumns = 7; // Initial number of columns
     const [colY, setcolY] = useState<number[]>(Array(numColumns).fill(0).map(() => -Math.floor(Math.random() * 301) - 100));
 
     useEffect(() => {
@@ -65,7 +60,6 @@ const ImageExplorer = () => {
         } else {
             setImages(prevImages => [...prevImages, ...newImages]);
         }
-        setPage(prevPage => prevPage + 1);
         setLoading(false);
 
         // the important part is to include colY in the dependency array!!
@@ -102,32 +96,6 @@ const ImageExplorer = () => {
         return () => window.removeEventListener('scroll', updateImagesInViewport);
     }, [images, translateX, translateY]);
 
-    const handleWheel = (e: React.WheelEvent) => {
-        const newTranslateX = translateX - e.deltaX;
-        const newTranslateY = translateY - e.deltaY;
-        setTranslateX(newTranslateX);
-        setTranslateY(newTranslateY);
-    };
-
-    const handleMouseDown = (e: React.MouseEvent) => {
-        const startX = e.clientX - translateX;
-        const startY = e.clientY - translateY;
-
-        const handleMouseMove = (e: MouseEvent) => {
-            const newTranslateX = e.clientX - startX;
-            const newTranslateY = e.clientY - startY;
-            setTranslateX(newTranslateX);
-            setTranslateY(newTranslateY);
-        };
-
-        const handleMouseUp = () => {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-        };
-
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
-    };
 
     // Function to position images in a grid layout
     const positionImages = (images: Image[]) => {
@@ -140,15 +108,26 @@ const ImageExplorer = () => {
             img.x = columnIndex * (columnWidth + gutter);
             img.y = columns[columnIndex];
 
-            // Check if the image is on screen using translateX
-            // wait this long before moving the image to the right
-            const X_BUFFER = columnWidth * 2;
+            const X_BUFFER = 0 * columnWidth;
 
-            while (img.x + translateX < 0 - X_BUFFER) {
+            let realLeft = img.x + translateX;
+            let realRight = img.x + columnWidth + translateX;
+
+            // if we scroll to the LEFT, we reveal more images on the RIGHT, while hiding images on the LEFT
+            // check if image col is off screen, and if so, move it to the right
+            let count = 0;
+            while (realRight < 0 - X_BUFFER) {
+                count++;
                 img.x += (numColumns) * (columnWidth + gutter);
+                realRight = img.x + columnWidth + translateX;
             }
-            while (img.x + translateX + columnWidth > containerWidth + X_BUFFER) {
+            if (count > 0)
+                console.log(count)
+            // if we scroll to the RIGHT, we reveal more images on the LEFT, while hiding images on the RIGHT
+            // check if image col is off screen, and if so, move it to the left
+            while (realLeft > containerWidth + X_BUFFER) {
                 img.x -= (numColumns) * (columnWidth + gutter);
+                realLeft = img.x + translateX;
             }
 
             columns[columnIndex] += img.height + gutter;
@@ -160,20 +139,10 @@ const ImageExplorer = () => {
 
     const { positionedImages, maxHeight } = positionImages(images);
 
-    useEffect(() => {
-        const preventDefaultScroll = (e: WheelEvent) => {
-            if (e.deltaX !== 0) {
-                e.preventDefault();
-            }
-        };
-
-        window.addEventListener('wheel', preventDefaultScroll, { passive: false });
-        return () => window.removeEventListener('wheel', preventDefaultScroll);
-    }, []);
 
     return (
         <div className="h-screen w-screen overflow-hidden">
-            <div className="sticky top-0 bg-white p-4 shadow-md z-10 hidden">
+            <div className="fixed w-[330px] top-0 bg-white p-4 shadow-md z-10" id="debug-panel">
                 <p className="text-lg font-semibold">
                     Images Loaded: <span className="text-blue-600">{images.length}</span>
                 </p>
@@ -184,11 +153,13 @@ const ImageExplorer = () => {
                     Images in Viewport: <span className="text-green-600">{imagesInViewport}</span>
                 </p>
                 <p>translateY: <span className="text-green-600">{translateY}</span> minY: <span className="text-green-600">{Math.min(...colY)}</span></p>
+                <p>translateX: <span className="text-green-600">{translateX}</span> minY: <span className="text-green-600">{Math.min(...colY)}</span></p>
             </div>
             <div className="grid_container"
                 ref={containerRef}
                 onMouseDown={handleMouseDown}
                 onWheel={handleWheel}
+                style={{ touchAction: 'none' }}
             >
                 <div className="grid_layer_wrapper">
                     <div className="absolute h-full w-full bg-stone-200"></div>
@@ -202,47 +173,7 @@ const ImageExplorer = () => {
                             }}
                         >
                             {positionedImages.map((img, index) => (
-                                <div
-                                    key={img.key}
-                                    className="grid_item"
-                                    style={{
-                                        position: 'absolute',
-                                        width: `${img.width}px`,
-                                        height: `${img.height}px`,
-                                        left: `${img.x}px`,
-                                        top: `${img.y}px`,
-                                        overflow: 'hidden',
-                                        borderRadius: '0.75rem', // equivalent to rounded-xl
-                                        margin: '0.25rem', // equivalent to m-1
-                                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', // equivalent to shadow-md
-                                        transition: 'box-shadow 0.3s ease-in-out',
-                                    }}
-                                    onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'} // equivalent to hover:shadow-lg
-                                    onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'}
-                                >
-                                    <img
-                                        src={img.src}
-                                        alt={`Image ${index}`}
-                                        className="grid_item_img"
-                                        style={{
-                                            width: '110%',
-                                            height: '110%',
-                                            objectFit: 'cover',
-                                            transition: 'all 0.3s ease-in-out',
-                                            transform: 'scale(1.1)',
-                                            margin: '-5%',
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            e.currentTarget.style.transform = 'scale(1)';
-                                            e.currentTarget.style.margin = '0';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.transform = 'scale(1.1)';
-                                            e.currentTarget.style.margin = '-5%';
-                                        }}
-                                        draggable={false}
-                                    />
-                                </div>
+                                <SingleImage key={img.key} img={img} alt={`Image ${index}`} />
                             ))}
                             <div ref={ref} className="h-10 w-10 absolute bottom-0 right-0" />
                         </div>
