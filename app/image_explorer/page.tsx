@@ -24,8 +24,9 @@ const ImageExplorer = () => {
     const [translateX, translateY, handleWheel, handleMouseDown] = usePan();
     const columnWidth = 300;
     const numColumns = 7;
-    const gutter = 10; // Space between images
+    const gutter = 25; // Space between images
     const [colY, setcolY] = useState<number[]>(Array(numColumns).fill(0).map(() => -Math.floor(Math.random() * 301) - 100));
+    const [centralImage, setCentralImage] = useState<Image | null>(null);
 
     useEffect(() => {
         // if we scroll over the top
@@ -69,6 +70,16 @@ const ImageExplorer = () => {
 
     useEffect(() => {
         fetchImages();
+        // Set a central image (for demonstration purposes)
+        setCentralImage({
+            src: `https://picsum.photos/${columnWidth * 2 + gutter}/${600}?random=${Date.now()}`,
+            width: columnWidth * 2 + gutter,
+            key: 'central-image',
+            height: 600,
+            column: 3,
+            x: 0,
+            y: 0,
+        });
     }, [fetchImages]);
 
     useEffect(() => {
@@ -102,12 +113,8 @@ const ImageExplorer = () => {
         let columns: number[] = [...colY];
         let maxHeight = 0;
         const containerWidth = containerRef.current?.clientWidth || (typeof window !== 'undefined' && window.innerWidth) || 700;
-        images.forEach((img, index) => {
-            let columnIndex = img.column;
 
-            img.x = columnIndex * (columnWidth + gutter);
-            img.y = columns[columnIndex];
-
+        const wrapColumns = (img: Image) => {
             const X_BUFFER = 0 * columnWidth;
 
             let realLeft = img.x + translateX;
@@ -115,22 +122,73 @@ const ImageExplorer = () => {
 
             // if we scroll to the LEFT, we reveal more images on the RIGHT, while hiding images on the LEFT
             // check if image col is off screen, and if so, move it to the right
-            let count = 0;
             while (realRight < 0 - X_BUFFER) {
-                count++;
                 img.x += (numColumns) * (columnWidth + gutter);
                 realRight = img.x + columnWidth + translateX;
             }
-            if (count > 0)
-                console.log(count)
             // if we scroll to the RIGHT, we reveal more images on the LEFT, while hiding images on the RIGHT
             // check if image col is off screen, and if so, move it to the left
             while (realLeft > containerWidth + X_BUFFER) {
                 img.x -= (numColumns) * (columnWidth + gutter);
                 realLeft = img.x + translateX;
             }
+        };
 
-            columns[columnIndex] += img.height + gutter;
+        // Position central image
+        if (centralImage) {
+            centralImage.x = 3 * (columnWidth + gutter);
+            centralImage.y = 0;
+            columns[3] = centralImage.height + gutter;
+            columns[4] = centralImage.height + gutter;
+            wrapColumns(centralImage);
+            maxHeight = Math.max(maxHeight, centralImage.height + gutter);
+        }
+
+        // Layout for column 3 & 4
+        const bottomOfBigImage = centralImage?.height + gutter;
+        const topOfBigImage = centralImage?.y - gutter;
+        let col3 = { a: bottomOfBigImage, b: bottomOfBigImage };
+        let col4 = { a: topOfBigImage, b: topOfBigImage };
+        const ax = 3 * (columnWidth + gutter);
+        const bx = ax + columnWidth + gutter;
+
+        images.forEach((img, index) => {
+            let columnIndex = img.column;
+
+            if (columnIndex === 3 && centralImage) {
+                if (index % 2 === 0) {
+                    img.x = ax;
+                    img.y = col3.a;
+                    col3.a += img.height + gutter;
+                } else {
+                    img.x = bx;
+                    img.y = col3.b;
+                    col3.b += img.height + gutter;
+                }
+                columns[3] = Math.max(col3.a, col3.b);
+            } else if (columnIndex === 4 && centralImage) {
+                // Layout for column 4
+                const imageTop = (i: Image, bottom: number) => bottom - i.height;
+
+                if (index % 2 === 0) {
+                    img.x = ax;
+                    img.y = imageTop(img, col4.a);
+                    col4.a -= img.height + gutter;
+                } else {
+                    img.x = bx;
+                    img.y = imageTop(img, col4.b);
+                    col4.b -= img.height + gutter;
+                }
+                columns[4] = Math.min(col4.a, col4.b);
+            } else {
+                // Standard layout for other columns
+                img.x = columnIndex * (columnWidth + gutter);
+                img.y = columns[columnIndex];
+                columns[columnIndex] += img.height + gutter;
+            }
+
+            wrapColumns(img);
+
             maxHeight = Math.max(maxHeight, columns[columnIndex]);
         });
 
@@ -172,6 +230,9 @@ const ImageExplorer = () => {
                                 height: `${maxHeight}px`,
                             }}
                         >
+                            {centralImage && (
+                                <SingleImage key={centralImage.key} img={centralImage} alt="Central Image" />
+                            )}
                             {positionedImages.map((img, index) => (
                                 <SingleImage key={img.key} img={img} alt={`Image ${index}`} />
                             ))}
