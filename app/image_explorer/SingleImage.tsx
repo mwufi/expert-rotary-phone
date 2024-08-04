@@ -25,7 +25,7 @@ export default function SingleImage({ img, alt }: SingleImageProps) {
             onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'} // equivalent to hover:shadow-lg
             onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'}
         >
-            <div className="bg-yellow-400 px-4">(x,y): ({img.x}, {img.y})</div>
+            <div className="bg-yellow-400 px-4">{img.key} -- {img.height}</div>
             <img
                 src={img.src}
                 alt={alt}
