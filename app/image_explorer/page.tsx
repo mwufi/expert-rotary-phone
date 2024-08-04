@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { usePreventDefaultScroll } from './hooks/preventScroll';
 import SingleImage from './SingleImage';
@@ -35,7 +35,6 @@ const ImageExplorer = () => {
         const Y_BUFFER = 500;
         const minColumnY = Math.min(...colUpperBounds);
         if (0 - translateY < minColumnY + Y_BUFFER) {
-            console.log("over the top!", -translateY, minColumnY);
             fetchImages({ above: true });
         }
 
@@ -43,7 +42,6 @@ const ImageExplorer = () => {
         const maxColumnY = Math.max(...colLowerBounds);
         const viewportHeight = window.innerHeight;
         if (viewportHeight - translateY > maxColumnY - Y_BUFFER) {
-            console.log("over the bottom!", -translateY, maxColumnY);
             fetchImages({ above: false });
         }
     }, [translateY, colUpperBounds, colLowerBounds]);
@@ -71,10 +69,11 @@ const ImageExplorer = () => {
                 newLowerBounds[column] += height + gutter;
             }
             const x = column * (columnWidth + gutter);
+            const keyid = Math.random().toString(36).substr(2, 9);
             return {
-                src: `https://picsum.photos/${columnWidth}/${height}?random=${i}`,
+                src: `https://picsum.photos/${columnWidth}/${height}?random=${keyid}`,
                 width: columnWidth,
-                key: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
+                key: `img-${Date.now()}-${keyid}`,
                 height,
                 column,
                 x,
@@ -126,6 +125,65 @@ const ImageExplorer = () => {
         }
     }, [inView, loading, fetchImages]);
 
+
+    // Returns a copy of the images array, with the central image wrapped around
+    const transformedImages = useMemo(() => {
+        if (!centralImage) return [...images];
+
+        const getIntersections = (columnNumber) => {
+            console.log(`--- Column ${columnNumber} ---`);
+            const colImages = images.filter(img => img.column === columnNumber).sort((a, b) => a.y - b.y);
+            console.log(colImages.map(i => i.y));
+
+            let topIndex = -1;
+            let bottomIndex = colImages.length;
+
+            for (let i = 0; i < colImages.length; i++) {
+                if (colImages[i].y + colImages[i].height > centralImage.y - gutter) {
+                    topIndex = i;
+                    bottomIndex = i + 1;
+                    break;
+                }
+            }
+
+            const topAmount = topIndex !== -1
+                ? (centralImage.y - gutter) - (colImages[topIndex].y + colImages[topIndex].height)
+                : 0;
+            const bottomAmount = bottomIndex < colImages.length
+                ? (colImages[bottomIndex].y - gutter) - (centralImage.y + centralImage.height)
+                : 0;
+
+            return [
+                { index: topIndex, amount: topAmount },
+                { index: bottomIndex, amount: bottomAmount }
+            ];
+        };
+
+        const intersections = {
+            3: getIntersections(3),
+            4: getIntersections(4)
+        };
+
+        let transformedImages = [];
+        for (let img of images) {
+            if (img.column === 3 || img.column === 4) {
+                const [topIntersection, bottomIntersection] = intersections[img.column];
+                const imgIndex = images.filter(i => i.column === img.column).indexOf(img);
+
+                if (imgIndex <= topIntersection.index) {
+                    transformedImages.push({ ...img, y: img.y + topIntersection.amount });
+                } else if (imgIndex >= bottomIntersection.index) {
+                    transformedImages.push({ ...img, y: img.y - bottomIntersection.amount });
+                } else {
+                    transformedImages.push(img);
+                }
+            } else {
+                transformedImages.push(img);
+            }
+        }
+        return transformedImages;
+    }, [images, centralImage, columnWidth, gutter, numColumns]);
+
     // Function to position images in a grid layout
     const positionImages = (images: Image[]) => {
         const containerWidth = containerRef.current?.clientWidth || (typeof window !== 'undefined' && window.innerWidth) || 700;
@@ -167,11 +225,10 @@ const ImageExplorer = () => {
             return acc;
         }, new Array(numColumns).fill(0)));
 
-
         return { positionedImages: images, maxHeight };
     };
 
-    const { positionedImages, maxHeight } = positionImages(images);
+    const { positionedImages, maxHeight } = positionImages(transformedImages);
 
     const [containerHeight, setContainerHeight] = useState(0);
     const [containerWidth, setContainerWidth] = useState(0);
@@ -195,9 +252,9 @@ const ImageExplorer = () => {
 
     const filteredImages = positionedImages.filter(img => {
         const isInViewport = img.y + img.height > -translateY &&
-                             img.y < -translateY + containerHeight &&
-                             img.x + img.width > -translateX &&
-                             img.x < -translateX + containerWidth;
+            img.y < -translateY + containerHeight &&
+            img.x + img.width > -translateX &&
+            img.x < -translateX + containerWidth;
         return isInViewport;
     });
 

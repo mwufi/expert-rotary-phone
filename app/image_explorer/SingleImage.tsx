@@ -10,6 +10,7 @@ export default function SingleImage({ img, alt }: SingleImageProps) {
         <div
             key={img.key}
             className="grid_item"
+            id={`img-${img.key}`}
             style={{
                 position: 'absolute',
                 width: `${img.width}px`,
