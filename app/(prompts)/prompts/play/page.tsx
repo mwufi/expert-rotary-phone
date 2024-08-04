@@ -207,7 +207,7 @@ export default function PromptsPlayPage({ id }: { id: string }) {
                         className="w-full border p-2 rounded mb-4 text-lg font-semibold"
                     />
                     <div className="mb-6">
-                        <p className="text-gray-600 italic">
+                        <p className="text-gray-600 text-sm">
                             Create, test, and save custom prompts with variable inputs.
                         </p>
                     </div>
