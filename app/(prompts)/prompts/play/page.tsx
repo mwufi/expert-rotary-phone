@@ -24,7 +24,11 @@ const parseInputVariables = (template: string): InputVariable[] => {
     });
 };
 
-export default function PromptsPlayPage({ id }: { id: string }) {
+type PromptsPlayPageProps = {
+    id?: string;
+};
+
+export default function PromptsPlayPage({ id }: PromptsPlayPageProps) {
     const router = useRouter();
 
     const [mode, setMode] = useState('editing');
