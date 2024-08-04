@@ -13,11 +13,11 @@ interface PromptPreviewProps {
 }
 
 function IFrame({ children }) {
-    const [ref, setRef] = useState();
+    const [ref, setRef] = useState<HTMLIFrameElement | null>(null);
     const container = ref?.contentWindow?.document?.body;
 
     return (
-        <iframe ref={setRef} className='w-full min-h-full' style={{minHeight: '500px'}}>
+        <iframe ref={setRef} className='w-full h-full' style={{ border: 'none' }}>
             {container && createPortal(children, container)}
         </iframe>
     );
@@ -33,7 +33,7 @@ const PromptPreview: React.FC<PromptPreviewProps> = ({ output, waiting }) => {
     }, [output]);
 
     return (
-        <Card className="w-full h-screen flex flex-col">
+        <Card className="w-full h-full flex flex-col">
             {waiting ? (
                 <div className="flex items-center justify-center h-full">
                     <p className="text-lg">Waiting for AI...</p>
@@ -45,21 +45,23 @@ const PromptPreview: React.FC<PromptPreviewProps> = ({ output, waiting }) => {
                         <TabsTrigger value="preview" className="flex-1 py-1 px-2 text-sm">HTML Preview</TabsTrigger>
                     </TabsList>
                     <TabsContent value="raw" className="flex-grow">
-                        <ScrollArea className="h-full w-full rounded-md border p-4">
+                        <ScrollArea className="h-[70vh] w-full rounded-md border p-4">
                             <pre className="whitespace-pre-wrap">{output}</pre>
                         </ScrollArea>
                     </TabsContent>
                     <TabsContent value="preview" className="flex-grow">
-                        <ScrollArea className="h-full w-full rounded-md border p-4">
+                        <div className="h-[70vh] w-full rounded-md border">
                             <IFrame>
                                 <div dangerouslySetInnerHTML={{ __html: parsedHtml || '' }} />
                             </IFrame>
-                        </ScrollArea>
+                        </div>
                     </TabsContent>
                 </Tabs>
             ) : (
                 <ScrollArea className="h-full w-full rounded-md border p-4">
-                    <pre className="whitespace-pre-wrap">{output}</pre>
+                    <ScrollArea className="h-[70vh] w-full rounded-md border p-4">
+                        <pre className="whitespace-pre-wrap">{output}</pre>
+                    </ScrollArea>
                 </ScrollArea>
             )}
         </Card>

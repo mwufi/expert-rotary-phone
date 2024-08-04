@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+  -webkit-font-smoothing: antialiased;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -63,6 +70,7 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -73,6 +81,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -83,9 +92,11 @@
   0% {
     transform: translateY(0px) rotate(0deg);
   }
+
   50% {
     transform: translateY(-20px) rotate(10deg);
   }
+
   100% {
     transform: translateY(0px) rotate(0deg);
   }
