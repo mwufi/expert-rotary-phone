@@ -5,11 +5,24 @@ import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getFirstCodeBlock } from '@/lib/utils';
+import { createPortal } from 'react-dom';
 
 interface PromptPreviewProps {
     output: string;
     waiting: boolean;
 }
+
+function IFrame({ children }) {
+    const [ref, setRef] = useState();
+    const container = ref?.contentWindow?.document?.body;
+
+    return (
+        <iframe ref={setRef} className='w-full min-h-full' style={{minHeight: '500px'}}>
+            {container && createPortal(children, container)}
+        </iframe>
+    );
+}
+
 
 const PromptPreview: React.FC<PromptPreviewProps> = ({ output, waiting }) => {
     const [parsedHtml, setParsedHtml] = useState<string | null>(null);
@@ -38,7 +51,9 @@ const PromptPreview: React.FC<PromptPreviewProps> = ({ output, waiting }) => {
                     </TabsContent>
                     <TabsContent value="preview" className="flex-grow">
                         <ScrollArea className="h-full w-full rounded-md border p-4">
-                            <div dangerouslySetInnerHTML={{ __html: parsedHtml || '' }} />
+                            <IFrame>
+                                <div dangerouslySetInnerHTML={{ __html: parsedHtml || '' }} />
+                            </IFrame>
                         </ScrollArea>
                     </TabsContent>
                 </Tabs>

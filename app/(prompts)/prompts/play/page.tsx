@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import PromptPreview from './PromptPreview';
 import { FetchedPrompt, InputVariable, Prompt } from '../types';
+import Test from './Test'
 
 const samplePrompt = `
 you are an AI agent. please double the input:
@@ -282,6 +283,17 @@ export default function PromptsPlayPage({ id }: { id: string }) {
                             )}
                         </div>
                         <div className="w-1/2">
+                            <article className="relative z-0 mx-auto flex flex-col items-center justify-center bg-gradient-to-br p-4 filter from-green-600 to-blue-600 overflow-hidden hover:brightness-110 h-16 rounded-lg">
+                                <div className="absolute left-0 top-0 h-24 w-1/2 bg-gradient-to-br from-black/20 via-transparent to-transparent"></div>
+                                <div className="absolute flex items-center rounded-xl top-2 right-3.5 text-xs">
+                                    <svg className="mr-1.5 text-white" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 32 32" fill="currentColor">
+                                        <path d="M22.45,6a5.47,5.47,0,0,1,3.91,1.64,5.7,5.7,0,0,1,0,8L16,26.13,5.64,15.64a5.7,5.7,0,0,1,0-8,5.48,5.48,0,0,1,7.82,0L16,10.24l2.53-2.58A5.44,5.44,0,0,1,22.45,6m0-2a7.47,7.47,0,0,0-5.34,2.24L16,7.36,14.89,6.24a7.49,7.49,0,0,0-10.68,0,7.72,7.72,0,0,0,0,10.82L16,29,27.79,17.06a7.72,7.72,0,0,0,0-10.82A7.49,7.49,0,0,0,22.45,4Z"></path>
+                                    </svg>
+                                    <span className="text-white">789</span>
+                                </div>
+                                <div className="absolute opacity-60 text-4xl drop-shadow">🌿</div>
+                                <h4 className="z-40 max-w-full truncate text-center font-bold leading-tight text-blue-50 text-md" style={{ textShadow: "0px 1px 2px rgba(0, 0, 0, 0.25);" }}>EcoAI Assistant</h4>
+                            </article>
                             <PromptPreview output={output} waiting={waiting} />
                         </div>
                     </div>
@@ -290,6 +302,7 @@ export default function PromptsPlayPage({ id }: { id: string }) {
             <footer className="p-4 bg-gray-100">
                 <Link href="/prompts" className="text-blue-500">Back to Home</Link>
             </footer>
+            <Test/>
         </div>
     );
 }
