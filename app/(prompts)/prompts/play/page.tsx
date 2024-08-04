@@ -126,6 +126,29 @@ export default function PromptsPlayPage({ id }: { id: string }) {
         // Redirect to the new forked prompt using Next.js router
         router.push(`/prompts/${newId}`);
     };
+
+    const handleDeletePrompt = () => {
+        if (!id) {
+            alert("Cannot delete an unsaved prompt.");
+            return;
+        }
+
+        const confirmDelete = window.confirm("Are you sure you want to delete this prompt?");
+        if (!confirmDelete) return;
+
+        // Get existing prompts from localStorage
+        const existingPrompts = JSON.parse(localStorage.getItem('prompts') || '[]');
+
+        // Filter out the prompt to be deleted
+        const updatedPrompts = existingPrompts.filter(p => p.id !== id);
+
+        // Save updated prompts back to localStorage
+        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+
+        // Redirect to the prompts home page
+        router.push('/prompts');
+    };
+
     const handleSavePrompt = () => {
         const newPrompt: FetchedPrompt = {
             id: id || Date.now().toString(),
@@ -228,7 +251,8 @@ export default function PromptsPlayPage({ id }: { id: string }) {
                     <div className="flex items-center">
                         <button onClick={handleSavePrompt} className="bg-blue-500 text-white px-4 py-2 rounded mr-2 hover:bg-blue-600 transition-colors">Save</button>
                         <button onClick={handleForkPrompt} className="bg-green-500 text-white px-4 py-2 rounded mr-2 hover:bg-green-600 transition-colors">Fork</button>
-                        <button onClick={handleViewHistory} className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors">History</button>
+                        <button onClick={handleViewHistory} className="bg-gray-500 text-white px-4 py-2 rounded mr-2 hover:bg-gray-600 transition-colors">History</button>
+                        <button onClick={handleDeletePrompt} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors">Delete</button>
                     </div>
                 </div>
             </header>
