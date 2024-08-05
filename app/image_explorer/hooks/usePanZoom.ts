@@ -24,7 +24,6 @@ export function usePan(): [...PanHandlers] {
     }, [translateX, translateY, updateState]);
 
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
-        e.preventDefault();
         const startX = e.clientX - translateX;
         const startY = e.clientY - translateY;
 
@@ -32,7 +31,7 @@ export function usePan(): [...PanHandlers] {
             updateState(e.clientX - startX, e.clientY - startY);
         };
 
-        const handleMouseUp = () => {
+        const handleMouseUp = (e: MouseEvent) => {
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
         };

@@ -239,6 +239,10 @@ const ImageExplorer = () => {
         return isNearViewport;
     });
 
+    const handleImageClicked = (img: Image) => {
+        console.log('Image clicked', img);
+    };
+
     return (
         <div className="h-screen w-screen overflow-hidden">
             <div className="fixed w-[330px] top-0 bg-white p-4 shadow-md z-10" id="debug-panel">
@@ -270,10 +274,10 @@ const ImageExplorer = () => {
                             }}
                         >
                             {centralImage && (
-                                <SingleImage key={centralImage.key} img={centralImage} alt="Central Image" />
+                                <SingleImage key={centralImage.key} img={centralImage} alt="Central Image" onImageClicked={handleImageClicked} />
                             )}
                             {filteredImages.map((img, index) => (
-                                <SingleImage key={img.key} img={img} alt={`Image ${index}`} />
+                                <SingleImage key={img.key} img={img} alt={`Image ${index}`} onImageClicked={handleImageClicked} />
                             ))}
                             <div ref={ref} className="h-10 w-10 absolute bottom-0 right-0" />
                         </div>
