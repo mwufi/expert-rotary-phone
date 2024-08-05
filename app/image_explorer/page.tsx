@@ -7,6 +7,8 @@ import SingleImage from './SingleImage';
 import { Image } from './types';
 import { usePan } from './hooks/usePanZoom';
 import { useImageExplorerStore } from './store';
+import { getImages } from './api.server';
+import useImagePreloader from './hooks/useImagePreloader';
 
 const ImageExplorer = () => {
     const {
@@ -34,12 +36,12 @@ const ImageExplorer = () => {
         if (!colUpperBounds || !colLowerBounds) return;
 
         const Y_BUFFER = 500;
-        const minColumnY = Math.min(...colUpperBounds);
+        const minColumnY = Math.max(...colUpperBounds);
         if (0 - translateY < minColumnY + Y_BUFFER) {
             fetchImages({ above: true });
         }
 
-        const maxColumnY = Math.max(...colLowerBounds);
+        const maxColumnY = Math.min(...colLowerBounds);
         const viewportHeight = window.innerHeight;
         if (viewportHeight - translateY > maxColumnY - Y_BUFFER) {
             fetchImages({ above: false });
@@ -55,25 +57,21 @@ const ImageExplorer = () => {
         let newUpperBounds = colUpperBounds || [...baseline];
         let newLowerBounds = colLowerBounds || [...baseline];
 
-        const newImages: Image[] = Array.from({ length: numColumns * 2 }, (_, i) => {
+        const newImages: Image[] = (await getImages(numColumns * 2, { width: columnWidth })).map((img: Image, i: number) => {
             const column = i % numColumns;
             const height = 400;
 
             let y;
             if (above) {
-                y = newUpperBounds[column];
+                y = newUpperBounds[column] + height + gutter;
                 newUpperBounds[column] -= height + gutter;
             } else {
                 y = newLowerBounds[column];
                 newLowerBounds[column] += height + gutter;
             }
             const x = column * (columnWidth + gutter);
-            const keyid = Math.random().toString(36).substr(2, 9);
             return {
-                src: `https://picsum.photos/${columnWidth}/${height}?random=${keyid}`,
-                width: columnWidth,
-                key: `img-${Date.now()}-${keyid}`,
-                height,
+                ...img,
                 column,
                 x,
                 y,
@@ -85,6 +83,12 @@ const ImageExplorer = () => {
         setImages(above ? [...newImages, ...images] : [...images, ...newImages]);
         setLoading(false);
     }, [loading, colUpperBounds, colLowerBounds, numColumns, columnWidth, gutter, images, setColUpperBounds, setColLowerBounds, setImages, setLoading]);
+
+    const preloadSrcList = useMemo(() => {
+        return images.map(img => img.src);
+    }, [images]);
+
+    const { imagesPreloaded } = useImagePreloader(preloadSrcList)
 
     const hasRun = useRef(false);
 
@@ -226,11 +230,13 @@ const ImageExplorer = () => {
     }, [setContainerHeight, setContainerWidth]);
 
     const filteredImages = positionedImages.filter(img => {
-        const isInViewport = img.y + img.height > -translateY &&
-            img.y < -translateY + containerHeight &&
+        // +translateY means "in screen coordinates"
+        const buffer = 1000;
+        const isNearViewport = img.y + translateY > -1 * buffer &&
+            img.y + translateY < containerHeight + buffer &&
             img.x + img.width > -translateX &&
             img.x < -translateX + containerWidth;
-        return isInViewport;
+        return isNearViewport;
     });
 
     return (
@@ -239,6 +245,7 @@ const ImageExplorer = () => {
                 <p className="text-lg font-semibold">
                     Images Loaded: <span className="text-blue-600">{filteredImages.length}/{images.length}</span>
                 </p>
+                <p>{imagesPreloaded ? "Images Preloaded" : "Images Loading..."}</p>
                 <p>
                     columns: <span className="text-green-600">{numColumns}</span>
                 </p>
