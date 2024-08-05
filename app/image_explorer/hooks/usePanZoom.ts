@@ -6,7 +6,7 @@ type PanHandlers = [
     (e: React.MouseEvent) => void
 ];
 
-export function usePan(): [number, number, ...PanHandlers] {
+export function usePan(): [...PanHandlers] {
     const {
         translateX,
         translateY,
