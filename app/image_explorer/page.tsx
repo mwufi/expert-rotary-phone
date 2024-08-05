@@ -1,44 +1,44 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { usePreventDefaultScroll } from './hooks/preventScroll';
 import SingleImage from './SingleImage';
 import { Image } from './types';
-import usePan from './hooks/usePanZoom';
-
+import { usePan } from './hooks/usePanZoom';
+import { useImageExplorerStore } from './store';
 
 const ImageExplorer = () => {
-    const [images, setImages] = useState<Image[]>([]);
-    const [loading, setLoading] = useState(false);
+    const {
+        images, loading, colUpperBounds, colLowerBounds, centralImage,
+        translateX, translateY, containerHeight, containerWidth,
+        setImages, setLoading, setColUpperBounds, setColLowerBounds,
+        setCentralImage,
+        setContainerHeight, setContainerWidth
+    } = useImageExplorerStore();
+
     const [ref, inView] = useInView({
         threshold: 0,
         triggerOnce: false,
     });
 
-    // we can pass a function here, but for now, ignore all scroll! (otherwise it scrolls the page)
-    usePreventDefaultScroll(e => true)
+    usePreventDefaultScroll(e => true);
 
     const containerRef = useRef<HTMLDivElement>(null);
-    const [translateX, translateY, handleWheel, handleMouseDown] = usePan();
+    const [handleWheel, handleMouseDown] = usePan();
     const columnWidth = 300;
     const numColumns = 7;
-    const gutter = 25; // Space between images
-    const [colUpperBounds, setColUpperBounds] = useState<number[] | null>(null);
-    const [colLowerBounds, setColLowerBounds] = useState<number[] | null>(null);
-    const [centralImage, setCentralImage] = useState<Image | null>(null);
+    const gutter = 25;
 
     useEffect(() => {
         if (!colUpperBounds || !colLowerBounds) return;
 
-        // if we scroll over the top
         const Y_BUFFER = 500;
         const minColumnY = Math.min(...colUpperBounds);
         if (0 - translateY < minColumnY + Y_BUFFER) {
             fetchImages({ above: true });
         }
 
-        // if we scroll over the bottom
         const maxColumnY = Math.max(...colLowerBounds);
         const viewportHeight = window.innerHeight;
         if (viewportHeight - translateY > maxColumnY - Y_BUFFER) {
@@ -50,7 +50,6 @@ const ImageExplorer = () => {
         if (loading) return;
 
         setLoading(true);
-        // Simulating an API call to fetch images
 
         let baseline = Array(numColumns).fill(0).map(() => -Math.floor(Math.random() * 301) - 100)
         let newUpperBounds = colUpperBounds || [...baseline];
@@ -81,27 +80,17 @@ const ImageExplorer = () => {
             };
         });
 
-        // Use functional updates to avoid dependencies on state
-        setColUpperBounds(_ => {
-            return newUpperBounds;
-        });
-
-        setColLowerBounds(_ => {
-            return newLowerBounds
-        });
-
-        setImages(prevImages => above ? [...newImages, ...prevImages] : [...prevImages, ...newImages]);
+        setColUpperBounds(newUpperBounds);
+        setColLowerBounds(newLowerBounds);
+        setImages(above ? [...newImages, ...images] : [...images, ...newImages]);
         setLoading(false);
-    }, [loading, colUpperBounds, colLowerBounds, numColumns, columnWidth, gutter]);
+    }, [loading, colUpperBounds, colLowerBounds, numColumns, columnWidth, gutter, images, setColUpperBounds, setColLowerBounds, setImages, setLoading]);
 
-    // In development mode, this effect might run twice
-    // We can use a ref to ensure it only runs once, even in dev mode
     const hasRun = useRef(false);
 
     useEffect(() => {
         const initialFetch = async () => {
             await fetchImages();
-            // Set a central image (for demonstration purposes)
             setCentralImage({
                 src: `https://picsum.photos/${columnWidth * 2 + gutter}/${600}?random=${Date.now()}`,
                 width: columnWidth * 2 + gutter,
@@ -117,7 +106,7 @@ const ImageExplorer = () => {
             initialFetch();
             hasRun.current = true;
         }
-    }, []); // Empty dependency array to ensure it only runs once on mount
+    }, []);
 
     useEffect(() => {
         if (inView && !loading) {
@@ -125,15 +114,11 @@ const ImageExplorer = () => {
         }
     }, [inView, loading, fetchImages]);
 
-
-    // Returns a copy of the images array, with the central image wrapped around
     const transformedImages = useMemo(() => {
         if (!centralImage) return [...images];
 
         const getIntersections = (columnNumber) => {
-            console.log(`--- Column ${columnNumber} ---`);
             const colImages = images.filter(img => img.column === columnNumber).sort((a, b) => a.y - b.y);
-            console.log(colImages.map(i => i.y));
 
             let topIndex = -1;
             let bottomIndex = colImages.length;
@@ -182,9 +167,8 @@ const ImageExplorer = () => {
             }
         }
         return transformedImages;
-    }, [images, centralImage, columnWidth, gutter, numColumns]);
+    }, [images, centralImage, gutter]);
 
-    // Function to position images in a grid layout
     const positionImages = (images: Image[]) => {
         const containerWidth = containerRef.current?.clientWidth || (typeof window !== 'undefined' && window.innerWidth) || 700;
 
@@ -194,32 +178,26 @@ const ImageExplorer = () => {
             let realLeft = img.x + translateX;
             let realRight = img.x + columnWidth + translateX;
 
-            // if we scroll to the LEFT, we reveal more images on the RIGHT, while hiding images on the LEFT
-            // check if image col is off screen, and if so, move it to the right
             while (realRight < 0 - X_BUFFER) {
                 img.x += (numColumns) * (columnWidth + gutter);
                 realRight = img.x + columnWidth + translateX;
             }
-            // if we scroll to the RIGHT, we reveal more images on the LEFT, while hiding images on the RIGHT
-            // check if image col is off screen, and if so, move it to the left
             while (realLeft > containerWidth + X_BUFFER) {
                 img.x -= (numColumns) * (columnWidth + gutter);
                 realLeft = img.x + translateX;
             }
         };
 
-        // Position central image
         if (centralImage) {
             centralImage.x = 3 * (columnWidth + gutter);
             centralImage.y = 0;
             wrapColumns(centralImage);
         }
 
-        images.forEach((img, index) => {
+        images.forEach((img) => {
             wrapColumns(img);
         });
 
-        // calculate the max column height
         const maxHeight = Math.max(...images.reduce((acc, img) => {
             acc[img.column] = (acc[img.column] || 0) + img.height + gutter;
             return acc;
@@ -229,9 +207,6 @@ const ImageExplorer = () => {
     };
 
     const { positionedImages, maxHeight } = positionImages(transformedImages);
-
-    const [containerHeight, setContainerHeight] = useState(0);
-    const [containerWidth, setContainerWidth] = useState(0);
 
     useEffect(() => {
         const updateContainerDimensions = () => {
@@ -248,7 +223,7 @@ const ImageExplorer = () => {
         return () => {
             window.removeEventListener('resize', updateContainerDimensions);
         };
-    }, []);
+    }, [setContainerHeight, setContainerWidth]);
 
     const filteredImages = positionedImages.filter(img => {
         const isInViewport = img.y + img.height > -translateY &&
