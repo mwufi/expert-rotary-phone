@@ -15,7 +15,7 @@ const ImageExplorer = () => {
         images, loading, colUpperBounds, colLowerBounds, centralImage,
         translateX, translateY, containerHeight, containerWidth,
         setImages, setLoading, setColUpperBounds, setColLowerBounds,
-        setCentralImage,
+        setCentralImage, setTranslateX, setTranslateY,
         setContainerHeight, setContainerWidth
     } = useImageExplorerStore();
 
@@ -241,6 +241,17 @@ const ImageExplorer = () => {
 
     const handleImageClicked = (img: Image) => {
         console.log('Image clicked', img);
+        // Reset the central image position and update translation
+        img.column = 3;
+        img.x = 0;
+        img.y = 0;
+        img.width = columnWidth * 2 + gutter;
+        img.height = 600;
+        setTranslateX(-352);
+        setTranslateY(199);
+        setCentralImage(img);
+        const updatedImages = images.filter(image => image.key !== img.key);
+        setImages([...updatedImages]);
     };
 
     return (
@@ -268,7 +279,7 @@ const ImageExplorer = () => {
                         <div className="grid_content"
                             style={{
                                 transform: `translate3d(${translateX}px, ${translateY}px, 0)`,
-                                transition: 'transform 0.1s ease-out',
+                                transition: 'transform 0.8s ease-out',
                                 width: `${numColumns * (columnWidth + gutter)}px`,
                                 height: `${maxHeight}px`,
                             }}

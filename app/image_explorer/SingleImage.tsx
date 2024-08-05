@@ -77,7 +77,7 @@ export default function SingleImage({ img, alt, onImageClicked }: SingleImagePro
                 borderRadius: '0.75rem', // equivalent to rounded-xl
                 margin: '0.25rem', // equivalent to m-1
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', // equivalent to shadow-md
-                transition: 'box-shadow 0.3s ease-in-out',
+                transition: 'box-shadow 0.3s ease-in-out, left 0.8s ease-in-out, top 0.8s ease-in-out',
             }}
             onMouseEnter={(e) => {
                 e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';

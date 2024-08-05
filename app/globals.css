@@ -88,6 +88,11 @@ body {
   }
 }
 
+img {
+  pointer-events: none;
+  user-select: none;
+}
+
 @keyframes float {
   0% {
     transform: translateY(0px) rotate(0deg);
