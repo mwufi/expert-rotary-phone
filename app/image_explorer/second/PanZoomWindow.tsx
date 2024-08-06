@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react';
+import { usePreventDefaultScroll } from '../hooks/preventScroll';
 
 const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
     const [translateX, setTranslateX] = useState(0);
@@ -28,6 +29,13 @@ const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
         setIsDragging(false);
     };
 
+    usePreventDefaultScroll(e => true);
+
+    const handleWheel = (e: React.WheelEvent) => {
+        setTranslateX(prevX => prevX - e.deltaX);
+        setTranslateY(prevY => prevY - e.deltaY);
+    };
+
     useEffect(() => {
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
@@ -42,6 +50,7 @@ const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
             ref={containerRef}
             className="h-screen w-screen overflow-hidden cursor-move"
             onMouseDown={handleMouseDown}
+            onWheel={handleWheel}
         >
             <div
                 className="h-full w-full bg-gray-100"
