@@ -1,6 +1,7 @@
 import { Image } from './types';
 import { Download } from 'lucide-react';
 import { useState, useRef } from 'react';
+import AbsoluteContainer from './AbsoluteContainer';
 
 interface SingleImageProps {
     img: Image;
@@ -8,11 +9,26 @@ interface SingleImageProps {
     onImageClicked: (img: Image) => void;
 }
 
-export default function SingleImage({ img, alt, onImageClicked }: SingleImageProps) {
+const ImageContainer: React.FC<{
+    children: React.ReactNode;
+}> = ({ children }) => {
+    return (
+        <div
+            className="grid_item relative overflow-hidden rounded-xl m-1 shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out"
+        >
+            {children}
+        </div>
+    );
+};
+
+const SingleImage: React.FC<SingleImageProps> = ({ img, alt, onImageClicked }) => {
+    console.log('re-rendering', img)
+
     const [isHovering, setIsHovering] = useState(false);
     const isDragging = useRef(false);
     const dragStartPos = useRef({ x: 0, y: 0 });
 
+    const absolute = false;
     const handleDownload = async (e: React.MouseEvent) => {
         e.stopPropagation();
         try {
@@ -22,13 +38,9 @@ export default function SingleImage({ img, alt, onImageClicked }: SingleImagePro
             }
             const downloadUrl = img.src;
 
-            // Create a Blob from the downloadUrl
             const blob = await fetch(downloadUrl).then(res => res.blob());
-
-            // Create a new URL object from the Blob
             const blobUrl = window.URL.createObjectURL(blob);
 
-            // Create a link element and trigger download
             const link = document.createElement('a');
             link.href = blobUrl;
             link.download = `image-${img.key}.jpg`;
@@ -36,7 +48,6 @@ export default function SingleImage({ img, alt, onImageClicked }: SingleImagePro
             link.click();
             document.body.removeChild(link);
 
-            // Clean up the Blob URL
             window.URL.revokeObjectURL(blobUrl);
         } catch (error) {
             console.error('Error downloading image:', error);
@@ -62,33 +73,9 @@ export default function SingleImage({ img, alt, onImageClicked }: SingleImagePro
         isDragging.current = false;
     };
 
-    return (
-        <div
-            key={img.key}
-            className="grid_item relative"
-            id={`img-${img.key}`}
-            style={{
-                position: 'absolute',
-                width: `${img.width}px`,
-                height: `${img.height}px`,
-                left: `${img.x}px`,
-                top: `${img.y}px`,
-                overflow: 'hidden',
-                borderRadius: '0.75rem', // equivalent to rounded-xl
-                margin: '0.25rem', // equivalent to m-1
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', // equivalent to shadow-md
-                transition: 'box-shadow 0.3s ease-in-out, left 0.8s ease-in-out, top 0.8s ease-in-out',
-            }}
-            onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
-                setIsHovering(true);
-            }}
-            onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
-                setIsHovering(false);
-            }}
-        >
-            {/* <div className="bg-yellow-400 px-4">{img.key} -- {img.height}</div> */}
+
+    const children = <>
+        <ImageContainer>
             <img
                 src={img.src}
                 alt={alt}
@@ -114,14 +101,22 @@ export default function SingleImage({ img, alt, onImageClicked }: SingleImagePro
                 onMouseUp={handleMouseUp}
                 draggable={false}
             />
-            {isHovering && (
-                <button
-                    className="absolute bottom-2 right-2 p-2 bg-gray-200 bg-opacity-70 rounded-full hover:bg-opacity-100 transition-opacity"
-                    onClick={handleDownload}
-                >
-                    <Download size={20} color="#4A5568" />
-                </button>
-            )}
-        </div>
-    )
-}
+        </ImageContainer>
+        {isHovering && (
+            <button
+                className="absolute bottom-2 right-2 p-2 bg-gray-200 bg-opacity-70 rounded-full hover:bg-opacity-100 transition-opacity"
+                onClick={handleDownload}
+            >
+                <Download size={20} color="#4A5568" />
+            </button>
+        )}
+    </>
+
+    return absolute ? (
+        <AbsoluteContainer img={img}>
+            {children}
+        </AbsoluteContainer>
+    ) : <>{children}</>;
+};
+
+export default SingleImage;

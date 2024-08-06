@@ -48,7 +48,7 @@ const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
     return (
         <div
             ref={containerRef}
-            className="h-screen w-screen overflow-hidden cursor-move"
+            className="h-screen w-screen overflow-hidden"
             onMouseDown={handleMouseDown}
             onWheel={handleWheel}
         >
@@ -56,7 +56,7 @@ const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
                 className="h-full w-full bg-gray-100"
                 style={{
                     transform: `translate(${translateX}px, ${translateY}px)`,
-                    transition: isDragging ? 'none' : 'transform 0.1s ease-out',
+                    transition: isDragging ? 'none' : 'transform 0.4s ease-out',
                 }}
             >
                 {children}

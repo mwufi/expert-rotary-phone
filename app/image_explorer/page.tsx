@@ -285,6 +285,7 @@ const ImageExplorer = () => {
                             }}
                         >
                             {centralImage && (
+                                
                                 <SingleImage key={centralImage.key} img={centralImage} alt="Central Image" onImageClicked={handleImageClicked} />
                             )}
                             {filteredImages.map((img, index) => (
