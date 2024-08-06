@@ -31,18 +31,9 @@ const useImgPositions = (images: Image[], currentPos: { x: number, y: number }, 
 
     useEffect(() => {
         const calculateImgPositions = () => {
-            const columns = 6;
+            const columns = 8;
             const gapSize = 16; // 4rem gap
             const totalWidth = columns * columnWidth + (columns - 1) * gapSize;
-
-            let positions = images.map((img, index) => {
-                const column = index % columns;
-                const row = Math.floor(index / columns);
-                return {
-                    x: column * (columnWidth + gapSize),
-                    y: row * (img.height + gapSize)
-                };
-            });
 
             const viewport = {
                 x: -currentPos.x,
@@ -51,15 +42,25 @@ const useImgPositions = (images: Image[], currentPos: { x: number, y: number }, 
                 height: window.innerHeight
             }
 
-            // if positions don't fit in viewport, place it so that it does
-            const adjustedPositions = positions.map((pos) => {
-                while (pos.x < viewport.x) {
-                    pos.x += totalWidth + gapSize;
+            const positions = images.map((img, index) => {
+                const column = index % columns;
+                const row = Math.floor(index / columns);
+                let x = column * (columnWidth + gapSize);
+                let y = row * (img.height + gapSize);
+
+                // if it's too far left, shift to the right
+                // - check if the imgRight is off screen to the left
+                while (x + columnWidth < viewport.x) {
+                    x += totalWidth + gapSize;
                 }
-                return pos;
+
+                return {
+                    x,
+                    y
+                };
             });
 
-            return adjustedPositions;
+            return positions;
         };
 
         const newPositions = calculateImgPositions();
