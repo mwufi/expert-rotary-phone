@@ -11,11 +11,64 @@ import { getImages } from '../api.server';
 
 const PosDisplay = () => {
     const { currentPos } = usePanZoom();
+
+    const viewport = {
+        x: -currentPos.x,
+        y: -currentPos.y,
+        width: window.innerWidth,
+        height: window.innerHeight
+    }
+
     return (
         <div className="fixed top-0 left-0 p-4 m-4 z-10 rounded-xl bg-white/70">
-            {currentPos.x}, {currentPos.y}
+            <p>Viewport: {viewport.x}, {viewport.y} -- {viewport.width}, {viewport.height}</p>
         </div>
     );
+};
+// Custom hook for image positions
+const useImgPositions = (images: Image[], currentPos: { x: number, y: number }, columnWidth: number) => {
+    const [imgPositions, setImgPositions] = useState([]);
+
+    useEffect(() => {
+        const calculateImgPositions = () => {
+            const columns = 6;
+            const gapSize = 16; // 4rem gap
+            const totalWidth = columns * columnWidth + (columns - 1) * gapSize;
+
+            let positions = images.map((img, index) => {
+                const column = index % columns;
+                const row = Math.floor(index / columns);
+                return {
+                    x: column * (columnWidth + gapSize),
+                    y: row * (img.height + gapSize)
+                };
+            });
+
+            const viewport = {
+                x: -currentPos.x,
+                y: -currentPos.y,
+                width: window.innerWidth,
+                height: window.innerHeight
+            }
+
+            // if positions don't fit in viewport, place it so that it does
+            const adjustedPositions = positions.map((pos) => {
+                while (pos.x < viewport.x) {
+                    pos.x += totalWidth + gapSize;
+                }
+                return pos;
+            });
+
+            return adjustedPositions;
+        };
+
+        const newPositions = calculateImgPositions();
+        if (JSON.stringify(newPositions) !== JSON.stringify(imgPositions)) {
+            setImgPositions(newPositions);
+        }
+    }, [images, currentPos, columnWidth, imgPositions]);
+
+    return imgPositions;
 };
 
 const ImageGrid = () => {
@@ -36,22 +89,38 @@ const ImageGrid = () => {
         // Add any additional logic for image click
     }, []);
 
+    // Use the new custom hook for image positions
+    const imgPositions = useImgPositions(images, currentPos, columnWidth);
+
     // Memoize the grid content to prevent unnecessary re-renders
-    const memoizedGridContent = React.useMemo(() => (
-        <>
-            {images.map((img) => (
-                <SingleImage
-                    key={img.key}
-                    img={img}
-                    alt={`Image ${img.key}`}
-                    onImageClicked={handleImageClick}
-                />
-            ))}
-        </>
-    ), [images, handleImageClick]);
+    const memoizedGridContent = React.useMemo(() => {
+        return (
+            (
+                <>
+                    {images.map((img, index) => (
+                        <div style={{
+                            position: 'absolute',
+                            left: imgPositions[index]?.x || 0,
+                            top: imgPositions[index]?.y || 0,
+                            width: img.width,
+                            height: img.height
+                        }}>
+                            <SingleImage
+                                key={img.key}
+                                img={img}
+                                alt={`Image ${img.key}`}
+                                onImageClicked={handleImageClick}
+
+                            />
+                        </div>
+                    ))}
+                </>
+            )
+        )
+    }, [images, imgPositions, handleImageClick]);
 
     return (
-        <div className="grid grid-cols-6 gap-4 bg-zinc-400">
+        <div className="bg-zinc-400">
             <div>{currentPos.x}</div>
             {memoizedGridContent}
         </div>
