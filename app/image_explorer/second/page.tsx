@@ -1,13 +1,22 @@
 'use client'
 
 import React from 'react';
-import PanZoomWindow from './PanZoomWindow';
-
+import InertialPanZoomWindow, { usePanZoom } from './InertialPanZoomWindow';
 
 import { useState, useEffect } from 'react';
 import { Image } from '../types';
 import SingleImage from '../SingleImage';
 import { getImages } from '../api.server';
+
+
+const PosDisplay = () => {
+    const { currentPos } = usePanZoom();
+    return (
+        <div>
+            {currentPos.x}, {currentPos.y}
+        </div>
+    );
+};
 
 const ImageGrid = () => {
     const [images, setImages] = useState<Image[]>([]);
@@ -27,8 +36,10 @@ const ImageGrid = () => {
     };
 
     return (
-        <div className="grid grid-cols-7 gap-4">
-
+        <div className="grid grid-cols-6 gap-4 bg-zinc-400">
+            {/* <div>
+                {currentPos.x}, {currentPos.y}
+            </div> */}
             {images.map((img) => (
                 <SingleImage
                     key={img.key}
@@ -45,11 +56,10 @@ const ImageGrid = () => {
 
 const SecondPage = () => {
     return (
-        <PanZoomWindow>
-            <div className="flex items-center justify-center h-full w-full">
-                <ImageGrid />
-            </div>
-        </PanZoomWindow>
+        <InertialPanZoomWindow>
+            <PosDisplay />
+            <ImageGrid />
+        </InertialPanZoomWindow>
     );
 };
 

@@ -14,7 +14,7 @@ const ImageContainer: React.FC<{
 }> = ({ children }) => {
     return (
         <div
-            className="grid_item relative overflow-hidden rounded-xl m-1 shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out"
+            className="grid_item relative overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out"
         >
             {children}
         </div>
@@ -79,15 +79,7 @@ const SingleImage: React.FC<SingleImageProps> = ({ img, alt, onImageClicked }) =
             <img
                 src={img.src}
                 alt={alt}
-                className="grid_item_img"
-                style={{
-                    width: '110%',
-                    height: '110%',
-                    objectFit: 'cover',
-                    transition: 'all 0.3s ease-in-out',
-                    transform: 'scale(1.1)',
-                    margin: '-5%',
-                }}
+                className="grid_item_img object-cover w-full h-full"
                 onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'scale(1)';
                     e.currentTarget.style.margin = '0';
