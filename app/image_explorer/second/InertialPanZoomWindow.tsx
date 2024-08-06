@@ -2,16 +2,31 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { usePreventDefaultScroll } from '../hooks/preventScroll';
+import { create } from 'zustand';
+
+interface PanZoomState {
+    translateX: number;
+    translateY: number;
+    setTranslateX: (x: number) => void;
+    setTranslateY: (y: number) => void;
+}
+
+const usePanZoomStore = create<PanZoomState>((set) => ({
+    translateX: 0,
+    translateY: 0,
+    setTranslateX: (x) => set({ translateX: x }),
+    setTranslateY: (y) => set({ translateY: y }),
+}));
 
 export function usePanZoom() {
+    const { translateX, translateY } = usePanZoomStore();
     return {
-        currentPos: { x: 0, y: 0 }
+        currentPos: { x: translateX, y: translateY }
     }
 }
 
 const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
-    const [translateX, setTranslateX] = useState(0);
-    const [translateY, setTranslateY] = useState(0);
+    const { translateX, translateY, setTranslateX, setTranslateY } = usePanZoomStore();
     const [isDragging, setIsDragging] = useState(false);
     const [startX, setStartX] = useState(0);
     const [startY, setStartY] = useState(0);
@@ -72,7 +87,7 @@ const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
         };
 
         requestAnimationFrame(render);
-    }, []);
+    }, [setTranslateX, setTranslateY]);
 
     return (
         <div
