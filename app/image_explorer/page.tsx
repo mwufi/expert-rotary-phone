@@ -279,7 +279,7 @@ const ImageExplorer = () => {
                         <div className="grid_content"
                             style={{
                                 transform: `translate3d(${translateX}px, ${translateY}px, 0)`,
-                                transition: 'transform 0.8s ease-out',
+                                transition: 'transform 0.2s ease-out',
                                 width: `${numColumns * (columnWidth + gutter)}px`,
                                 height: `${maxHeight}px`,
                             }}
