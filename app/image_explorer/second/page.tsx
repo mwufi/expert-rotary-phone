@@ -131,10 +131,9 @@ const ImageGrid = () => {
     );
 };
 
-
 const SecondPage = () => {
     return (
-        <div>
+        <div className="h-screen overflow-hidden">
             <PosDisplay />
             <div className="mt-4"></div>
             <InertialPanZoomWindow>

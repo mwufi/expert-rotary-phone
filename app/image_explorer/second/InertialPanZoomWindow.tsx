@@ -35,25 +35,53 @@ const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
     const scrollYRef = useRef(0);
     const targetXRef = useRef(0);
     const targetYRef = useRef(0);
+    const velocityXRef = useRef(0);
+    const velocityYRef = useRef(0);
+    const lastTimeRef = useRef(0);
     const isMobileRef = useRef(false);
 
     const handleStart = (clientX: number, clientY: number) => {
         setIsDragging(true);
         setStartX(clientX - translateX);
         setStartY(clientY - translateY);
+        velocityXRef.current = 0;
+        velocityYRef.current = 0;
+        lastTimeRef.current = Date.now();
     };
 
     const handleMove = (clientX: number, clientY: number) => {
         if (!isDragging) return;
+        const currentTime = Date.now();
+        const timeElapsed = currentTime - lastTimeRef.current;
         const newTranslateX = clientX - startX;
         const newTranslateY = clientY - startY;
-        const multiplier = isMobileRef.current ? 1.2 : 1; // Increase speed for mobile
-        targetXRef.current = newTranslateX * multiplier;
-        targetYRef.current = newTranslateY * multiplier;
+        const multiplier = 7;
+        if (timeElapsed > 0) {
+            velocityXRef.current = (newTranslateX - targetXRef.current) / timeElapsed * multiplier;
+            velocityYRef.current = (newTranslateY - targetYRef.current) / timeElapsed * multiplier;
+        }
+
+        targetXRef.current = newTranslateX;
+        targetYRef.current = newTranslateY;
+        lastTimeRef.current = currentTime;
     };
 
     const handleEnd = () => {
         setIsDragging(false);
+        if (isMobileRef.current) {
+            const decay = 0.99;
+            const animate = () => {
+                velocityXRef.current *= decay;
+                velocityYRef.current *= decay;
+                targetXRef.current += velocityXRef.current;
+                targetYRef.current += velocityYRef.current;
+
+                if (Math.abs(velocityXRef.current) > 0.05 || Math.abs(velocityYRef.current) > 0.05) {
+                    requestAnimationFrame(animate);
+                }
+            };
+            requestAnimationFrame(animate);
+        }
     };
 
     const handleMouseDown = (e: React.MouseEvent) => handleStart(e.clientX, e.clientY);
@@ -99,7 +127,7 @@ const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
         const lerp = (a: number, b: number, n: number) => (1 - n) * a + n * b;
 
         const render = () => {
-            const lerpFactor = isMobileRef.current ? 0.1 : 0.05; // Faster lerp for mobile
+            const lerpFactor = isMobileRef.current ? 0.15 : 0.05; // Faster lerp for mobile
             scrollXRef.current = lerp(scrollXRef.current, targetXRef.current, lerpFactor);
             scrollYRef.current = lerp(scrollYRef.current, targetYRef.current, lerpFactor);
 

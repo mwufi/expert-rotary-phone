@@ -7,7 +7,26 @@ body {
   font-size: 0.875rem;
   line-height: 1.5rem;
   -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
 }
+
+html {
+  position: fixed;
+  height: 100%;
+  overflow: hidden;
+}
+
+#__next {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 
 @layer base {
   :root {
