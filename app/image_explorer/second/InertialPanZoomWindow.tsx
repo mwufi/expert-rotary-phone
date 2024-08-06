@@ -74,14 +74,14 @@ const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
                 velocityXRef.current = Math.min(Math.max(velocityXRef.current, -15), 15);
                 velocityYRef.current = Math.min(Math.max(velocityYRef.current, -15), 15);
                 if(velocityXRef.current > 0) {
-                    velocityXRef.current -= 0.05;
+                    velocityXRef.current -= 0.03;
                 } else {
-                    velocityXRef.current += 0.05;
+                    velocityXRef.current += 0.03;
                 }
                 if(velocityYRef.current > 0) {
-                    velocityYRef.current -= 0.05;
+                    velocityYRef.current -= 0.03;
                 } else {
-                    velocityYRef.current += 0.05;
+                    velocityYRef.current += 0.03;
                 }
                 targetXRef.current += velocityXRef.current;
                 targetYRef.current += velocityYRef.current;
