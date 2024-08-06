@@ -55,7 +55,7 @@ const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
         const timeElapsed = currentTime - lastTimeRef.current;
         const newTranslateX = clientX - startX;
         const newTranslateY = clientY - startY;
-        const multiplier = 7;
+        const multiplier = 15;
         if (timeElapsed > 0) {
             velocityXRef.current = (newTranslateX - targetXRef.current) / timeElapsed * multiplier;
             velocityYRef.current = (newTranslateY - targetYRef.current) / timeElapsed * multiplier;
@@ -69,10 +69,20 @@ const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
     const handleEnd = () => {
         setIsDragging(false);
         if (isMobileRef.current) {
-            const decay = 0.99;
             const animate = () => {
-                velocityXRef.current *= decay;
-                velocityYRef.current *= decay;
+                // Cap the max velocity to 15
+                velocityXRef.current = Math.min(Math.max(velocityXRef.current, -15), 15);
+                velocityYRef.current = Math.min(Math.max(velocityYRef.current, -15), 15);
+                if(velocityXRef.current > 0) {
+                    velocityXRef.current -= 0.05;
+                } else {
+                    velocityXRef.current += 0.05;
+                }
+                if(velocityYRef.current > 0) {
+                    velocityYRef.current -= 0.05;
+                } else {
+                    velocityYRef.current += 0.05;
+                }
                 targetXRef.current += velocityXRef.current;
                 targetYRef.current += velocityYRef.current;
 
