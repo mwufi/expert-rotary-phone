@@ -35,24 +35,45 @@ const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
     const scrollYRef = useRef(0);
     const targetXRef = useRef(0);
     const targetYRef = useRef(0);
+    const isMobileRef = useRef(false);
 
-    const handleMouseDown = (e: React.MouseEvent) => {
+    const handleStart = (clientX: number, clientY: number) => {
         setIsDragging(true);
-        setStartX(e.clientX - translateX);
-        setStartY(e.clientY - translateY);
+        setStartX(clientX - translateX);
+        setStartY(clientY - translateY);
     };
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMove = (clientX: number, clientY: number) => {
         if (!isDragging) return;
-        const newTranslateX = e.clientX - startX;
-        const newTranslateY = e.clientY - startY;
-        targetXRef.current = newTranslateX;
-        targetYRef.current = newTranslateY;
+        const newTranslateX = clientX - startX;
+        const newTranslateY = clientY - startY;
+        const multiplier = isMobileRef.current ? 1.2 : 1; // Increase speed for mobile
+        targetXRef.current = newTranslateX * multiplier;
+        targetYRef.current = newTranslateY * multiplier;
     };
 
-    const handleMouseUp = () => {
+    const handleEnd = () => {
         setIsDragging(false);
     };
+
+    const handleMouseDown = (e: React.MouseEvent) => handleStart(e.clientX, e.clientY);
+    const handleMouseMove = (e: MouseEvent) => handleMove(e.clientX, e.clientY);
+    const handleMouseUp = handleEnd;
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        if (e.touches.length === 1) {
+            isMobileRef.current = true;
+            handleStart(e.touches[0].clientX, e.touches[0].clientY);
+        }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+        if (e.touches.length === 1) {
+            handleMove(e.touches[0].clientX, e.touches[0].clientY);
+        }
+    };
+
+    const handleTouchEnd = handleEnd;
 
     usePreventDefaultScroll(e => true);
 
@@ -64,9 +85,13 @@ const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
+        document.addEventListener('touchmove', handleTouchMove);
+        document.addEventListener('touchend', handleTouchEnd);
         return () => {
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
+            document.removeEventListener('touchmove', handleTouchMove);
+            document.removeEventListener('touchend', handleTouchEnd);
         };
     }, [isDragging, startX, startY]);
 
@@ -74,8 +99,9 @@ const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
         const lerp = (a: number, b: number, n: number) => (1 - n) * a + n * b;
 
         const render = () => {
-            scrollXRef.current = lerp(scrollXRef.current, targetXRef.current, 0.05);
-            scrollYRef.current = lerp(scrollYRef.current, targetYRef.current, 0.05);
+            const lerpFactor = isMobileRef.current ? 0.1 : 0.05; // Faster lerp for mobile
+            scrollXRef.current = lerp(scrollXRef.current, targetXRef.current, lerpFactor);
+            scrollYRef.current = lerp(scrollYRef.current, targetYRef.current, lerpFactor);
 
             scrollXRef.current = Math.floor(scrollXRef.current * 100) / 100;
             scrollYRef.current = Math.floor(scrollYRef.current * 100) / 100;
@@ -92,8 +118,9 @@ const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
     return (
         <div
             ref={containerRef}
-            className=""
+            className="bg-blue-100 h-screen w-screen overflow-hidden"
             onMouseDown={handleMouseDown}
+            onTouchStart={handleTouchStart}
             onWheel={handleWheel}
         >
             <div
