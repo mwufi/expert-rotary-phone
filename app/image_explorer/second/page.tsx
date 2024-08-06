@@ -26,7 +26,7 @@ const PosDisplay = () => {
     );
 };
 // Custom hook for image positions
-const useImgPositions = (images: Image[], currentPos: { x: number, y: number }, columnWidth: number) => {
+const useImgPositions = (images: Image[], currentPos: { x: number, y: number }, columnWidth: number, wrapLeft: boolean, wrapRight: boolean) => {
     const [imgPositions, setImgPositions] = useState([]);
 
     useEffect(() => {
@@ -48,10 +48,13 @@ const useImgPositions = (images: Image[], currentPos: { x: number, y: number }, 
                 let x = column * (columnWidth + gapSize);
                 let y = row * (img.height + gapSize);
 
-                // if it's too far left, shift to the right
-                // - check if the imgRight is off screen to the left
-                while (x + columnWidth < viewport.x) {
+                // Wrap to the right if it's too far left and wrapping left is allowed
+                while (wrapLeft && x + columnWidth < viewport.x) {
                     x += totalWidth + gapSize;
+                }
+                // Wrap to the left if it's too far right and wrapping right is allowed
+                while (wrapRight && x > viewport.x + viewport.width) {
+                    x -= totalWidth + gapSize;
                 }
 
                 return {
@@ -91,7 +94,7 @@ const ImageGrid = () => {
     }, []);
 
     // Use the new custom hook for image positions
-    const imgPositions = useImgPositions(images, currentPos, columnWidth);
+    const imgPositions = useImgPositions(images, currentPos, columnWidth, true, true);
 
     // Memoize the grid content to prevent unnecessary re-renders
     const memoizedGridContent = React.useMemo(() => {
