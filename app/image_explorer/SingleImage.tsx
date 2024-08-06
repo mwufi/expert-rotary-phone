@@ -22,8 +22,7 @@ const ImageContainer: React.FC<{
 };
 
 const SingleImage: React.FC<SingleImageProps> = ({ img, alt, onImageClicked }) => {
-    console.log('re-rendering', img)
-
+    console.log("lol")
     const [isHovering, setIsHovering] = useState(false);
     const isDragging = useRef(false);
     const dragStartPos = useRef({ x: 0, y: 0 });
