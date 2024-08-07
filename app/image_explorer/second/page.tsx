@@ -26,7 +26,7 @@ const PosDisplay = () => {
     );
 };
 // Custom hook for image positions
-const useImgPositions = (images: Image[], currentPos: { x: number, y: number }, columnWidth: number, wrapLeft: boolean, wrapRight: boolean) => {
+const useImgPositions = (images: Image[], currentPos: { x: number, y: number }, columnWidth: number, wrapLeft: boolean, wrapRight: boolean, wrapTop: boolean, wrapBottom: boolean) => {
     const [imgPositions, setImgPositions] = useState([]);
 
     useEffect(() => {
@@ -34,6 +34,8 @@ const useImgPositions = (images: Image[], currentPos: { x: number, y: number }, 
             const columns = 8;
             const gapSize = 16; // 4rem gap
             const totalWidth = columns * columnWidth + (columns - 1) * gapSize;
+            const totalHeight = images.length / columns * images[0]?.height + (images.length / columns - 1) * gapSize;
+
 
             const viewport = {
                 x: -currentPos.x,
@@ -57,11 +59,18 @@ const useImgPositions = (images: Image[], currentPos: { x: number, y: number }, 
                     x -= totalWidth + gapSize;
                 }
 
+                while (wrapTop && y + img.height < viewport.y) {
+                    y += totalHeight + gapSize;
+                }
+                while (wrapBottom && y > viewport.y + viewport.height) {
+                    y -= totalHeight + gapSize;
+                }
+
                 return {
                     x,
                     y
                 };
-            });
+            })
 
             return positions;
         };
@@ -94,7 +103,7 @@ const ImageGrid = () => {
     }, []);
 
     // Use the new custom hook for image positions
-    const imgPositions = useImgPositions(images, currentPos, columnWidth, true, true);
+    const imgPositions = useImgPositions(images, currentPos, columnWidth, true, true, true, true);
 
     // Memoize the grid content to prevent unnecessary re-renders
     const memoizedGridContent = React.useMemo(() => {
@@ -135,7 +144,6 @@ const SecondPage = () => {
     return (
         <div className="h-screen overflow-hidden">
             <PosDisplay />
-            <div className="mt-4"></div>
             <InertialPanZoomWindow>
                 <ImageGrid />
             </InertialPanZoomWindow>

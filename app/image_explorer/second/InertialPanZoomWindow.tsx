@@ -73,12 +73,12 @@ const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
                 // Cap the max velocity to 15
                 velocityXRef.current = Math.min(Math.max(velocityXRef.current, -15), 15);
                 velocityYRef.current = Math.min(Math.max(velocityYRef.current, -15), 15);
-                if(velocityXRef.current > 0) {
+                if (velocityXRef.current > 0) {
                     velocityXRef.current -= 0.03;
                 } else {
                     velocityXRef.current += 0.03;
                 }
-                if(velocityYRef.current > 0) {
+                if (velocityYRef.current > 0) {
                     velocityYRef.current -= 0.03;
                 } else {
                     velocityYRef.current += 0.03;
@@ -116,8 +116,9 @@ const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
     usePreventDefaultScroll(e => true);
 
     const handleWheel = (e: React.WheelEvent) => {
-        targetXRef.current -= e.deltaX;
-        targetYRef.current -= e.deltaY;
+        const multiplier = 0.5;
+        targetXRef.current -= e.deltaX * multiplier;
+        targetYRef.current -= e.deltaY * multiplier;
     };
 
     useEffect(() => {
