@@ -165,6 +165,7 @@ const ImageGrid = () => {
                 <>
                     {images.map((img, index) => (
                         <div
+                            key={img.key}
                             style={{
                                 position: 'absolute',
                                 left: imgPositions[index]?.x || 0,
@@ -189,7 +190,6 @@ const ImageGrid = () => {
                             }}
                         >
                             <SingleImage
-                                key={img.key}
                                 img={img}
                                 alt={`Image ${img.key}`}
                             />

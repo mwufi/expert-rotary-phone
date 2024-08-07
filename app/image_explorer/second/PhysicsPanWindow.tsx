@@ -86,7 +86,6 @@ const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
     };
 
     const handleScroll = (e: React.WheelEvent<HTMLDivElement>) => {
-        e.preventDefault();
         const scrollSpeed = 1; // Adjust this value to change scroll sensitivity
         const newPosition = {
             x: position.x - e.deltaX * scrollSpeed,

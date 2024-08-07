@@ -2,6 +2,7 @@ import { Image } from './types';
 import { Download } from 'lucide-react';
 import { useState, useRef } from 'react';
 import AbsoluteContainer from './AbsoluteContainer';
+import React from 'react';
 
 interface SingleImageProps {
     img: Image;
@@ -108,4 +109,4 @@ const SingleImage: React.FC<SingleImageProps> = ({ img, alt }) => {
     ) : <>{children}</>;
 };
 
-export default SingleImage;
+export default React.memo(SingleImage);
