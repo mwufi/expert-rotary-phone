@@ -11,23 +11,41 @@ const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
     const [startY, setStartY] = useState(0);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    const handleMouseDown = (e: React.MouseEvent) => {
+    const handleStart = (clientX: number, clientY: number) => {
         setIsDragging(true);
-        setStartX(e.clientX - translateX);
-        setStartY(e.clientY - translateY);
+        setStartX(clientX - translateX);
+        setStartY(clientY - translateY);
     };
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMove = (clientX: number, clientY: number) => {
         if (!isDragging) return;
-        const newTranslateX = e.clientX - startX;
-        const newTranslateY = e.clientY - startY;
+        const newTranslateX = clientX - startX;
+        const newTranslateY = clientY - startY;
         setTranslateX(newTranslateX);
         setTranslateY(newTranslateY);
     };
 
-    const handleMouseUp = () => {
+    const handleEnd = () => {
         setIsDragging(false);
     };
+
+    const handleMouseDown = (e: React.MouseEvent) => handleStart(e.clientX, e.clientY);
+    const handleMouseMove = (e: MouseEvent) => handleMove(e.clientX, e.clientY);
+    const handleMouseUp = handleEnd;
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        if (e.touches.length === 1) {
+            handleStart(e.touches[0].clientX, e.touches[0].clientY);
+        }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+        if (e.touches.length === 1) {
+            handleMove(e.touches[0].clientX, e.touches[0].clientY);
+        }
+    };
+
+    const handleTouchEnd = handleEnd;
 
     usePreventDefaultScroll(e => true);
 
@@ -39,9 +57,13 @@ const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
+        document.addEventListener('touchmove', handleTouchMove);
+        document.addEventListener('touchend', handleTouchEnd);
         return () => {
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
+            document.removeEventListener('touchmove', handleTouchMove);
+            document.removeEventListener('touchend', handleTouchEnd);
         };
     }, [isDragging, startX, startY]);
 
@@ -50,6 +72,7 @@ const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
             ref={containerRef}
             className="h-screen w-screen overflow-hidden"
             onMouseDown={handleMouseDown}
+            onTouchStart={handleTouchStart}
             onWheel={handleWheel}
         >
             <div
