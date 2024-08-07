@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { create } from 'zustand';
+import { usePreventDefaultScroll } from '../hooks/preventScroll';
 
 interface PanZoomState {
     position: { x: number, y: number };
@@ -21,7 +22,11 @@ export function usePanZoom() {
         currentPos: position
     }
 }
+
 const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
+    // this is so that the page doesn't go back when you do touchpad left
+    usePreventDefaultScroll(e => true);
+
     const { position, velocity, setPosition, setVelocity } = usePanZoomStore();
     const [isDragging, setIsDragging] = useState(false);
     const lastTimeRef = useRef(Date.now());
@@ -80,6 +85,16 @@ const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
+    const handleScroll = (e: React.WheelEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        const scrollSpeed = 1; // Adjust this value to change scroll sensitivity
+        const newPosition = {
+            x: position.x - e.deltaX * scrollSpeed,
+            y: position.y - e.deltaY * scrollSpeed
+        };
+        setPosition(newPosition);
+    };
+
     useEffect(() => {
         let animationFrameId: number;
 
@@ -135,6 +150,7 @@ const PanZoomWindow = ({ children }: { children: React.ReactNode }) => {
             onClick={(e) => {
                 handleTap(e.clientX, e.clientY);
             }}
+            onWheel={handleScroll}
         >
             <div
                 style={{

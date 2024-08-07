@@ -54,6 +54,16 @@ const PosDisplay = () => {
         </div>
     );
 };
+
+function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+const randomOffsets = Array.from({ length: 8 }, () => getRandomInt(-300, 300));
+
+
 // Custom hook for image positions
 const useImgPositions = (images: Image[], currentPos: { x: number, y: number }, columnWidth: number, wrapLeft: boolean, wrapRight: boolean, wrapTop: boolean, wrapBottom: boolean) => {
     const [imgPositions, setImgPositions] = useState([]);
@@ -73,7 +83,7 @@ const useImgPositions = (images: Image[], currentPos: { x: number, y: number }, 
                 height: window.innerHeight
             }
 
-            const colBottom = Array(columns).fill(0);
+            const colBottom = [...randomOffsets];
 
             const positions = images.map((img, index) => {
                 const column = index % columns;
