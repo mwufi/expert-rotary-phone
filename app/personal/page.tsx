@@ -59,7 +59,7 @@ const PersonalPage = () => {
                 </ul>
                 <h2 className="text-3xl font-light mt-16 mb-8">Links</h2>
                 <ul className="space-y-2">
-                    <IndexLink url="/image_explorer" title="Image Explorer" />
+                    <IndexLink url="/image_explorer/second" title="Image Explorer" />
                     <IndexLink url="/glowing/profile" title="A glowing profile page" />
                     <IndexLink url="/sandbox" title="Tailwind UI Kit" />
                     <IndexLink url="/domains" title="Search for domains (WIP)" />

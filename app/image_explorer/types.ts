@@ -7,4 +7,5 @@ export interface Image {
     key: string;
     x?: number;
     y?: number;
+    selected?: boolean;
 }

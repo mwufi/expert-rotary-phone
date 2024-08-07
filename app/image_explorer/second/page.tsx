@@ -1,12 +1,41 @@
 'use client'
 
 import React, { useCallback } from 'react';
-import InertialPanZoomWindow, { usePanZoom } from './InertialPanZoomWindow';
 
 import { useState, useEffect } from 'react';
 import { Image } from '../types';
 import SingleImage from '../SingleImage';
 import { getImages } from '../api.server';
+import PhysicsPanWindow, { usePanZoom } from './PhysicsPanWindow';
+
+
+const useFixedLayout = () => {
+    useEffect(() => {
+        // Apply styles to html element
+        document.documentElement.style.position = 'fixed';
+        document.documentElement.style.height = '100%';
+        document.documentElement.style.overflow = 'hidden';
+
+        // Apply styles to body element (assuming it's the equivalent of #__next)
+        document.body.style.position = 'absolute';
+        document.body.style.overflowY = 'auto';
+
+        // Cleanup function to remove styles when component unmounts
+        return () => {
+            document.documentElement.style.removeProperty('position');
+            document.documentElement.style.removeProperty('height');
+            document.documentElement.style.removeProperty('overflow');
+
+            document.body.style.removeProperty('position');
+            document.body.style.removeProperty('top');
+            document.body.style.removeProperty('left');
+            document.body.style.removeProperty('right');
+            document.body.style.removeProperty('bottom');
+            document.body.style.removeProperty('overflow-y');
+            document.body.style.removeProperty('-webkit-overflow-scrolling');
+        };
+    }, []);
+};
 
 
 const PosDisplay = () => {
@@ -44,11 +73,15 @@ const useImgPositions = (images: Image[], currentPos: { x: number, y: number }, 
                 height: window.innerHeight
             }
 
+            const colBottom = Array(columns).fill(0);
+
             const positions = images.map((img, index) => {
                 const column = index % columns;
-                const row = Math.floor(index / columns);
                 let x = column * (columnWidth + gapSize);
-                let y = row * (img.height + gapSize);
+                let y = colBottom[column];
+
+                // Update the column's bottom position
+                colBottom[column] += img.height + gapSize;
 
                 // Wrap to the right if it's too far left and wrapping left is allowed
                 while (wrapLeft && x + columnWidth < viewport.x) {
@@ -85,6 +118,9 @@ const useImgPositions = (images: Image[], currentPos: { x: number, y: number }, 
 };
 
 const ImageGrid = () => {
+    // prevent overflow on mobile
+    useFixedLayout();
+
     const { currentPos } = usePanZoom();
     const [images, setImages] = useState<Image[]>([]);
     const columnWidth = 300;
@@ -97,10 +133,17 @@ const ImageGrid = () => {
         fetchImages();
     }, []);
 
-    const handleImageClick = useCallback((img: Image) => {
-        console.log('Image clicked:', img);
-        // Add any additional logic for image click
-    }, []);
+    const handleImageClick = useCallback((clickedImg: Image) => {
+        console.log('Image clicked:', clickedImg);
+
+        setImages(prevImages => prevImages.map(img => {
+            if (img.key === clickedImg.key && !img.selected) {
+                return { ...img, width: img.width * 2, height: img.height * 2, selected: true };
+            } else {
+                return { ...img, width: columnWidth, height: img.height * (columnWidth / img.width), selected: false };
+            }
+        }));
+    }, [columnWidth]);
 
     // Use the new custom hook for image positions
     const imgPositions = useImgPositions(images, currentPos, columnWidth, true, true, true, true);
@@ -111,19 +154,34 @@ const ImageGrid = () => {
             (
                 <>
                     {images.map((img, index) => (
-                        <div style={{
-                            position: 'absolute',
-                            left: imgPositions[index]?.x || 0,
-                            top: imgPositions[index]?.y || 0,
-                            width: img.width,
-                            height: img.height
-                        }}>
+                        <div
+                            style={{
+                                position: 'absolute',
+                                left: imgPositions[index]?.x || 0,
+                                top: imgPositions[index]?.y || 0,
+                                width: img.width,
+                                height: img.height,
+                                transition: 'width 0.3s ease-in-out, height 0.3s ease-in-out'
+                            }}
+                            onMouseDown={(e) => {
+                                const startX = e.clientX;
+                                const startY = e.clientY;
+                                const handleMouseUp = (e: MouseEvent) => {
+                                    const endX = e.clientX;
+                                    const endY = e.clientY;
+                                    const distance = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+                                    if (distance < 5) {
+                                        handleImageClick(img);
+                                    }
+                                    document.removeEventListener('mouseup', handleMouseUp);
+                                };
+                                document.addEventListener('mouseup', handleMouseUp);
+                            }}
+                        >
                             <SingleImage
                                 key={img.key}
                                 img={img}
                                 alt={`Image ${img.key}`}
-                                onImageClicked={handleImageClick}
-
                             />
                         </div>
                     ))}
@@ -144,9 +202,9 @@ const SecondPage = () => {
     return (
         <div className="h-screen overflow-hidden">
             <PosDisplay />
-            <InertialPanZoomWindow>
+            <PhysicsPanWindow>
                 <ImageGrid />
-            </InertialPanZoomWindow>
+            </PhysicsPanWindow>
         </div>
     );
 };
