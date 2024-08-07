@@ -6,7 +6,6 @@ import AbsoluteContainer from './AbsoluteContainer';
 interface SingleImageProps {
     img: Image;
     alt: string;
-    onImageClicked: (img: Image) => void;
 }
 
 const ImageContainer: React.FC<{
@@ -21,7 +20,7 @@ const ImageContainer: React.FC<{
     );
 };
 
-const SingleImage: React.FC<SingleImageProps> = ({ img, alt, onImageClicked }) => {
+const SingleImage: React.FC<SingleImageProps> = ({ img, alt }) => {
     console.log("lol")
     const [isHovering, setIsHovering] = useState(false);
     const isDragging = useRef(false);
@@ -67,7 +66,6 @@ const SingleImage: React.FC<SingleImageProps> = ({ img, alt, onImageClicked }) =
     const handleMouseUp = (e: React.MouseEvent) => {
         if (!isDragging.current) {
             console.log('Image clicked');
-            onImageClicked(img);
         }
         isDragging.current = false;
     };
